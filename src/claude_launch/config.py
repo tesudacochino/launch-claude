@@ -39,7 +39,16 @@ class ProviderConfig(BaseModel):
     @property
     def name(self) -> str:
         """Nombre único del provider."""
-        return self.options.base_url.split(":")[1].split("/")[0].replace("http://", "").replace("https://", "")
+        # Extraer el host:port de la URL
+        url = self.options.base_url
+        # Remover protocolo si existe
+        if url.startswith("http://"):
+            url = url[7:]
+        elif url.startswith("https://"):
+            url = url[8:]
+        # Tomar la parte antes del primer /
+        url = url.split("/")[0]
+        return url
 
 
 class Config(BaseModel):
@@ -157,6 +166,11 @@ class ConfigWrapper:
         for name, data in self._data.items():
             # Excluir keys que no son providers
             if name in {"$schema", "share", "tools"}:
+                continue
+
+            # Si ya es un ProviderConfig, usar directamente
+            if isinstance(data, ProviderConfig):
+                providers[name] = data
                 continue
 
             options_data = data.get("options", {})
