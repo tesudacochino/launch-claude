@@ -3,6 +3,7 @@
 import sys
 import argparse
 from rich.console import Console
+from rich.panel import Panel
 
 from .config import ConfigWrapper, ProviderConfig
 from .cli import run_provider_selection, run_new_provider
@@ -18,6 +19,7 @@ def main():
         cl                    - Muestra menú principal
         cl <provider>         - Listar y seleccionar modelos de un provider
         cl --new              - Agregar nuevo provider
+        cl --list             - Listar todos los providers configurados
         cl <provider> --model <name>  - Lanzar Claude con modelo específico
         cl --help             - Mostrar ayuda
     """
@@ -44,6 +46,12 @@ def main():
     )
 
     parser.add_argument(
+        "--list", "-l",
+        action="store_true",
+        help="Listar todos los providers configurados"
+    )
+
+    parser.add_argument(
         "--config", "-c",
         help="Ruta al archivo de configuración"
     )
@@ -64,6 +72,25 @@ def main():
         sys.exit(1)
 
     # Casos de uso
+    if args.list:
+        # Listar providers configurados
+        if not config.providers:
+            console.print(Panel(
+                "[yellow]No hay providers configurados.[/yellow]\n\n"
+                "Ejecuta [bold]cl --new[/bold] para agregar uno.",
+                title="Providers",
+                border_style="yellow"
+            ))
+        else:
+            lines = [f"  [green]•[/green] {name} [dim]({provider.options.base_url})[/dim]"
+                     for name, provider in sorted(config.providers.items())]
+            console.print(Panel(
+                f"[bold]Providers configurados:[/bold]\n\n" + "\n".join(lines),
+                title="Providers",
+                border_style="green"
+            ))
+        return
+
     if args.new:
         # Modo agregar nuevo provider
         run_new_provider()
@@ -123,6 +150,7 @@ def main():
         console.print("Usa este CLI para lanzar Claude Code con diferentes providers:\n")
         console.print("  [bold]cl <provider>[/bold]     - Seleccionar modelo y lanzar")
         console.print("  [bold]cl <provider> --model <name>[/bold]  - Lanzar directamente con un modelo específico")
+        console.print("  [bold]cl --list[/bold]             - Listar todos los providers")
         console.print("  [bold]cl --new[/bold]              - Agregar nuevo provider\n")
 
         # Opcional: mostrar menú interactivo en el futuro
