@@ -23,6 +23,10 @@ python -m claude_launch.main [provider] [--model <name>]
 
 ### Running the CLI
 ```bash
+# Mostrar help
+./scripts/cl                           # Muestra help de uso
+./scripts/cl --help                    # Muestra help de uso
+
 # List models and select interactively
 ./scripts/cl mole
 ./scripts/cl chati
@@ -36,6 +40,10 @@ python -m claude_launch.main [provider] [--model <name>]
 
 # Use custom config file
 ./scripts/cl --config /path/to/config.json [provider]
+
+# Pass flags directly to Claude Code (after --)
+./scripts/cl mole --model mistral:latest -- --dangerously-skip-permissions
+./scripts/cl mole --model qwen3.5:122b -- --verbose --timeout=60
 ```
 
 ### Build and Compilation

@@ -1,7 +1,7 @@
 """Interfaz de línea de comandos con menús interactivos."""
 
 import sys
-from typing import Optional
+from typing import Optional, Union
 from rich.console import Console
 from rich.table import Table
 from rich.prompt import Prompt, Confirm
@@ -223,12 +223,14 @@ def run_menu():
             break
 
 
-def run_provider_selection(provider: ProviderConfig):
+def run_provider_selection(provider: ProviderConfig, dangerously_skip_permissions: bool = False,
+                           extra_args: Optional[list[str]] = None):
     """Seleccionar un modelo y lanzar Claude Code.
 
     Args:
         provider: El provider seleccionado
-        model_name: Nombre específico del modelo (opcional)
+        dangerously_skip_permissions: Si True, pasa --dangerously-skip-permissions a Claude Code
+        extra_args: Lista de flags adicionales a pasar a Claude Code
     """
     console.print(f"\n[bold]Conectando a {provider.options.base_url}...[/bold]")
 
@@ -273,10 +275,18 @@ def run_provider_selection(provider: ProviderConfig):
     # Lanzar Claude Code
     console.print(f"\n[bold green]OK: Llamando a Claude con modelo '{model_name}'...[/bold green]")
 
+    # Construir flags adicionales para launch_interactive
+    launcher_args = {}
+    if dangerously_skip_permissions and "--dangerously-skip-permissions" not in (extra_args or []):
+        launcher_args["extra_args"] = extra_args + ["--dangerously-skip-permissions"] if extra_args else ["--dangerously-skip-permissions"]
+    else:
+        launcher_args["extra_args"] = extra_args
+
     launcher = ClaudeLauncher(
         provider.options.base_url,
         provider.options.api_key,
-        model=model_name
+        model=model_name,
+        **launcher_args
     )
 
     exit_code = launcher.launch_interactive()

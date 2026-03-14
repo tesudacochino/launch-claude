@@ -9,17 +9,22 @@ from typing import Optional
 class ClaudeLauncher:
     """Ejecuta Claude Code con variables de entorno específicas."""
 
-    def __init__(self, base_url: str, api_key: str = "ollama", model: str = "qwen3.5:35b"):
+    def __init__(self, base_url: str, api_key: str = "ollama", model: str = "qwen3.5:35b",
+                 dangerously_skip_permissions: bool = False, extra_args: Optional[list[str]] = None):
         """Inicializar el launcher.
 
         Args:
             base_url: URL del endpoint para Claude Code
             api_key: API key de autenticación
             model: Modelo por defecto (ej: qwen3.5:35b)
+            dangerously_skip_permissions: Si True, pasa --dangerously-skip-permissions a Claude Code
+            extra_args: Lista de flags adicionales a pasar a Claude Code (ej: ["--verbose", "--timeout=30"])
         """
         self.base_url = base_url
         self.api_key = api_key
         self.model = model
+        self.dangerously_skip_permissions = dangerously_skip_permissions
+        self.extra_args = extra_args or []
 
     def get_env_vars(self) -> dict[str, str]:
         """Obtener variables de entorno para lanzar Claude Code."""
@@ -63,6 +68,13 @@ class ClaudeLauncher:
 
         # Construir el comando - usa el ejecutable claude que está en el PATH
         cmd = ["claude"]
+
+        # Agregar flags opcionales para Claude Code
+        if self.dangerously_skip_permissions:
+            cmd.append("--dangerously-skip-permissions")
+
+        # Agregar flags adicionales
+        cmd.extend(self.extra_args)
 
         # Lanzar el proceso heredando las variables de entorno ya configuradas
         process = subprocess.Popen(

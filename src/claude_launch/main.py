@@ -16,12 +16,18 @@ def main():
     """Entrada principal del programa.
 
     Uso:
-        cl                    - Muestra menú principal
-        cl <provider>         - Listar y seleccionar modelos de un provider
-        cl --new              - Agregar nuevo provider
-        cl --list             - Listar todos los providers configurados
-        cl <provider> --model <name>  - Lanzar Claude con modelo específico
-        cl --help             - Mostrar ayuda
+        cl                              - Muestra menú principal
+        cl <provider>                   - Listar y seleccionar modelos de un provider
+        cl <provider> --model <name>    - Lanzar Claude con modelo específico
+        cl <provider> --model <name> -- --flag  - Pasar flags a Claude Code
+        cl --new                        - Agregar nuevo provider
+        cl --list                       - Listar todos los providers configurados
+        cl --help                       - Mostrar ayuda
+
+    Ejemplos:
+        cl mole --model qwen3.5:35b
+        cl mole --model qwen3.5:35b -- --dangerously-skip-permissions
+        cl chati --model mistral:latest -- --verbose --timeout=60
     """
     parser = argparse.ArgumentParser(
         prog="cl",
@@ -56,7 +62,48 @@ def main():
         help="Ruta al archivo de configuración"
     )
 
-    args = parser.parse_args()
+    parser.add_argument(
+        "--dangerously-skip-permissions", "-d",
+        action="store_true",
+        help="Skip permission checks when launching Claude Code (passes --dangerously-skip-permissions to claude)"
+    )
+
+    # Usar parse_known_args para capturar argumentos adicionales después de --
+    args, extra_args = parser.parse_known_args()
+
+    # Filtrar flags propios del CLI y pasar el resto a Claude
+    if extra_args:
+        cli_options_with_values = {"--model", "-m", "--config", "-c"}
+        extra_args_filtered = []
+        skip_next = False
+
+        for i, arg in enumerate(extra_args):
+            if skip_next:
+                skip_next = False
+                continue
+
+            # Skip flags propios del CLI (incluyendo -d que ya fue capturado)
+            if arg in cli_options_with_values:
+                skip_next = True
+                continue
+            if arg in {"--new", "-n", "--list", "-l"}:
+                continue
+            if arg in {"--dangerously-skip-permissions", "-d"}:
+                continue
+
+            extra_args_filtered.append(arg)
+
+        args.extra_args = extra_args_filtered
+    else:
+        args.extra_args = []
+
+    # Si se pasó -d explícitamente, agregarlo a extra_args (si no está ya)
+    if hasattr(args, 'dangerously_skip_permissions') and args.dangerously_skip_permissions:
+        if "--dangerously-skip-permissions" not in args.extra_args:
+            args.extra_args.append("--dangerously-skip-permissions")
+
+    # Pasar los flags de configuración al atributo correspondiente
+    args.config = getattr(args, 'config', None)
 
     # Cargar configuración
     config_path = args.config or "config.json"
@@ -136,25 +183,20 @@ def main():
             launcher = ClaudeLauncher(
                 provider.options.base_url,
                 provider.options.api_key,
-                model=args.model
+                model=args.model,
+                dangerously_skip_permissions=False,  # Ya está en extra_args si se pasó -d
+                extra_args=args.extra_args
             )
             exit_code = launcher.launch_interactive()
             sys.exit(exit_code)
         else:
             # Modo interactivo - mostrar lista y seleccionar
-            run_provider_selection(provider)
+            from .cli import run_provider_selection
+            run_provider_selection(provider, extra_args=args.extra_args)
 
     else:
-        # Sin argumentos - mostrar menú principal (placeholder para futuro)
-        console.print("\n[bold blue]Claude Launch[/bold blue]\n")
-        console.print("Usa este CLI para lanzar Claude Code con diferentes providers:\n")
-        console.print("  [bold]cl <provider>[/bold]     - Seleccionar modelo y lanzar")
-        console.print("  [bold]cl <provider> --model <name>[/bold]  - Lanzar directamente con un modelo específico")
-        console.print("  [bold]cl --list[/bold]             - Listar todos los providers")
-        console.print("  [bold]cl --new[/bold]              - Agregar nuevo provider\n")
-
-        # Opcional: mostrar menú interactivo en el futuro
-        # run_menu()
+        # Sin argumentos - mostrar help
+        parser.print_help()
 
 
 if __name__ == "__main__":
