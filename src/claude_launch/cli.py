@@ -161,7 +161,7 @@ def add_provider_interactively():
     while True:
         base_url = Prompt.ask(
             "URL base del endpoint",
-            default="http://127.0.0.1:11434/v1"
+            default="http://127.0.0.1:11434"
         )
 
         if not base_url:
@@ -321,7 +321,7 @@ def run_new_provider():
     while True:
         base_url = Prompt.ask(
             "URL base del endpoint",
-            default="http://127.0.0.1:11434/v1"
+            default="http://127.0.0.1:11434"
         )
 
         if not base_url:
@@ -333,9 +333,10 @@ def run_new_provider():
             console.print(f"[green]OK: Conexión exitosa a {base_url}[/green]")
             break
         else:
-            console.print(f"[red]ERROR: No se pudo conectar a {base_url}. ¿Ollama está corriendo?[/red]")
-            retry = Confirm.ask("\n¿Intentar de nuevo?", default=True)
+            console.print(f"[red]ERROR: No se pudo conectar a {base_url}. Ollama no esta corriendo.[/red]")
+            retry = Confirm.ask("\n[green]¿Intentar de nuevo?[/green]", default=True)
             if not retry:
+                console.print("[yellow]Configuracion cancelada.[/yellow]")
                 return False
 
     # API Key
