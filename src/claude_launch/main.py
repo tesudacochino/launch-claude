@@ -2,6 +2,23 @@
 
 import sys
 import argparse
+
+# Forzar UTF-8 en Windows para emojis y caracteres especiales
+if sys.platform == "win32":
+    import os
+    os.environ["PYTHONIOENCODING"] = "utf-8"
+    # Configurar encoding de stdout/stderr
+    if sys.stdout is not None and not sys.stdout.encoding == "utf-8":
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
+    if sys.stderr is not None:
+        try:
+            sys.stderr.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
+
 from rich.console import Console
 from rich.panel import Panel
 
@@ -22,12 +39,14 @@ def main():
         cl <provider> --model <name> -- --flag  - Pasar flags a Claude Code
         cl --new                        - Agregar nuevo provider
         cl --list                       - Listar todos los providers configurados
+        cl -r <provider>                - Eliminar un provider existente
         cl --help                       - Mostrar ayuda
 
     Ejemplos:
         cl mole --model qwen3.5:35b
         cl mole --model qwen3.5:35b -- --dangerously-skip-permissions
         cl chati --model mistral:latest -- --verbose --timeout=60
+        cl -r pp                        # Eliminar provider 'pp'
     """
     parser = argparse.ArgumentParser(
         prog="cl",
@@ -66,6 +85,13 @@ def main():
         "--dangerously-skip-permissions", "-d",
         action="store_true",
         help="Skip permission checks when launching Claude Code (passes --dangerously-skip-permissions to claude)"
+    )
+
+    parser.add_argument(
+        "--remove", "-r",
+        dest="remove_provider",
+        metavar="PROVIDER",
+        help="Eliminar un provider existente"
     )
 
     # Usar parse_known_args para capturar argumentos adicionales después de --
@@ -119,6 +145,39 @@ def main():
         sys.exit(1)
 
     # Casos de uso
+    if args.remove_provider:
+        # Modo eliminar provider
+        provider_name = args.remove_provider
+        if provider_name not in config.providers:
+            console.print(Panel(
+                f"[red]ERROR: Provider '{provider_name}' no encontrado.[/red]\n\n"
+                "Providers disponibles:\n" +
+                "\n".join(f"  - {p}" for p in config.providers.keys()),
+                title="Error",
+                border_style="red"
+            ))
+            sys.exit(1)
+
+        from rich.prompt import Confirm
+        if not Confirm.ask(f"¿Estás seguro de que quieres eliminar el provider [bold]{provider_name}[/bold]?", default=False):
+            console.print("[yellow]Operación cancelada.[/yellow]")
+            return
+
+        if config.remove_provider(provider_name):
+            console.print(Panel(
+                f"[green]✓ Provider '{provider_name}' eliminado correctamente.[/green]",
+                title="Éxito",
+                border_style="green"
+            ))
+        else:
+            console.print(Panel(
+                f"[red]ERROR: No se pudo eliminar el provider '{provider_name}'.[/red]",
+                title="Error",
+                border_style="red"
+            ))
+            sys.exit(1)
+        return
+
     if args.list:
         # Listar providers configurados
         if not config.providers:
