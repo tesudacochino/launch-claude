@@ -130,17 +130,51 @@ class Config(BaseModel):
         return {}
 
 
-def _get_resource_path(relative_path: str) -> Path:
-    """Obtener la ruta correcta para recursos en ejecutable empaquetado."""
+def _get_executable_path() -> Path:
+    """Obtener la ruta del ejecutable (no del archivo temporal de PyInstaller)."""
     if hasattr(sys, '_MEIPASS') and sys._MEIPASS:
-        # Ejecutable empaquetado con PyInstaller
-        base_path = Path(sys._MEIPASS)
-    else:
-        # Ejecución normal o ejecutable sin _MEIPASS
-        # En modo windowed sin console, _MEIPASS puede no estar disponible
-        base_path = Path(sys.argv[0]).parent
+        # PyInstaller usa _MEIPASS para archivos extraídos
+        # Pero queremos el directorio donde está el ejecutable real
+        if hasattr(sys, '_MEIPASS_ORIGIN'):
+            # Algunas versiones lo usan para el ejecutable original
+            return Path(sys.executable).parent
+        return Path(sys.executable).parent
+    # Ejecución normal o desde script
+    if getattr(sys, 'frozen', False):
+        return Path(sys.executable).parent
+    return Path(sys.argv[0]).parent.resolve()
 
-    return base_path / relative_path
+
+def _get_config_path() -> Path:
+    """Obtener la ruta del archivo de configuración.
+
+    Prioridad:
+    1. config.json en el mismo directorio que el ejecutable
+    2. config.json en el directorio padre del ejecutable (para dist/ vs root)
+    3. config.json en el directorio actual (cwd)
+    4. ~/.claude/launch-config.json
+    """
+    exe_path = _get_executable_path()
+
+    # Primero: config.json en el directorio del ejecutable
+    exe_config = exe_path / "config.json"
+    if exe_config.exists():
+        return exe_config
+
+    # Segundo: config.json en el directorio padre (para estructura dist/)
+    parent_config = exe_path.parent / "config.json"
+    if parent_config.exists():
+        return parent_config
+
+    # Tercero: config.json en el directorio actual (cwd)
+    cwd_config = Path.cwd() / "config.json"
+    if cwd_config.exists():
+        return cwd_config
+
+    # Cuarto: config.json en el directorio del usuario
+    user_config = Path.home() / ".claude" / "launch-config.json"
+    user_config.parent.mkdir(parents=True, exist_ok=True)
+    return user_config
 
 
 class ConfigWrapper:
@@ -149,18 +183,9 @@ class ConfigWrapper:
     def __init__(self, path: str | Path | None = None):
         """Inicializar con un archivo de configuración."""
         if path is None:
-            # Buscar config.json en varias ubicaciones posibles
-            search_paths = [
-                _get_resource_path("config.json"),  # En ejecutable empaquetado
-                Path("config.json"),                 # En directorio actual
-                Path.home() / ".claude" / "launch-config.json",
-            ]
-            for p in search_paths:
-                if p.exists():
-                    path = p
-                    break
+            path = _get_config_path()
 
-        self.path = Path(path) if path else _get_resource_path("config.json")
+        self.path = Path(path)
         self._data: dict[str, dict] = {}
 
         if self.path.exists():
