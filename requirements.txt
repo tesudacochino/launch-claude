@@ -1,0 +1,6 @@
+# Dependencias para el proyecto
+rich>=13.7.0
+pydantic>=2.5.0
+requests>=2.31.0
+click>=8.1.7
+pyinstaller>=6.0.0
