@@ -22,8 +22,8 @@ if sys.platform == "win32":
 from rich.console import Console
 from rich.panel import Panel
 
-from .config import ConfigWrapper, ProviderConfig
-from .cli import run_provider_selection, run_new_provider
+from claude_launch.config import ConfigWrapper, ProviderConfig
+from claude_launch.cli import run_provider_selection, run_new_provider
 
 
 console = Console()

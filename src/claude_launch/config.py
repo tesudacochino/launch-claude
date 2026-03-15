@@ -1,6 +1,8 @@
 """Manejo de configuración del launcher."""
 
 import json
+import os
+import sys
 from pathlib import Path
 from typing import Any
 from pydantic import BaseModel, Field
@@ -128,14 +130,29 @@ class Config(BaseModel):
         return {}
 
 
+def _get_resource_path(relative_path: str) -> Path:
+    """Obtener la ruta correcta para recursos en ejecutable empaquetado."""
+    if hasattr(sys, '_MEIPASS') and sys._MEIPASS:
+        # Ejecutable empaquetado con PyInstaller
+        base_path = Path(sys._MEIPASS)
+    else:
+        # Ejecución normal o ejecutable sin _MEIPASS
+        # En modo windowed sin console, _MEIPASS puede no estar disponible
+        base_path = Path(sys.argv[0]).parent
+
+    return base_path / relative_path
+
+
 class ConfigWrapper:
     """Wrapper para manejar la configuración tipo OpenCode."""
 
     def __init__(self, path: str | Path | None = None):
         """Inicializar con un archivo de configuración."""
         if path is None:
+            # Buscar config.json en varias ubicaciones posibles
             search_paths = [
-                Path("config.json"),
+                _get_resource_path("config.json"),  # En ejecutable empaquetado
+                Path("config.json"),                 # En directorio actual
                 Path.home() / ".claude" / "launch-config.json",
             ]
             for p in search_paths:
@@ -143,7 +160,7 @@ class ConfigWrapper:
                     path = p
                     break
 
-        self.path = Path(path) if path else Path("config.json")
+        self.path = Path(path) if path else _get_resource_path("config.json")
         self._data: dict[str, dict] = {}
 
         if self.path.exists():
@@ -202,12 +219,13 @@ class ConfigWrapper:
                     data[name] = provider
 
         # Reconstruir datos que queremos mantener
-        with open(self.path, "r") as f:
-            original = json.load(f)
-
-        for key in ["$schema", "share", "tools"]:
-            if key in original:
-                data[key] = original[key]
+        # Si el archivo no existe (ejecutable empaquetado sin config.json), crear uno nuevo
+        if self.path.exists():
+            with open(self.path, "r") as f:
+                original = json.load(f)
+            for key in ["$schema", "share", "tools"]:
+                if key in original:
+                    data[key] = original[key]
 
         with open(self.path, "w") as f:
             json.dump(data, f, indent=2)

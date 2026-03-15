@@ -9,9 +9,9 @@ from rich.panel import Panel
 from rich.layout import Layout
 from rich.live import Live
 
-from .config import ConfigWrapper, ProviderConfig
-from .ollama_api import OllamaAPI
-from .launcher import ClaudeLauncher
+from claude_launch.config import ConfigWrapper, ProviderConfig
+from claude_launch.ollama_api import OllamaAPI
+from claude_launch.launcher import ClaudeLauncher
 
 
 console = Console()
