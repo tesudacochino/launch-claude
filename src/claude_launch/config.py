@@ -210,10 +210,8 @@ class ConfigWrapper:
             # Soportar ambos formatos: base_url y baseURL
             base_url = options_data.get("base_url") or options_data.get("baseURL", "")
             api_key = options_data.get("apiKey") or options_data.get("api_key", "ollama")
-            models = {
-                model_name: ModelConfig(**model_data)
-                for model_name, model_data in data.get("models", {}).items()
-            }
+            # No cargar modelos desde config.json - se fetchearán desde la API en tiempo de ejecución
+            models = {}
 
             providers[name] = ProviderConfig(
                 type=data.get("type", "ollama"),

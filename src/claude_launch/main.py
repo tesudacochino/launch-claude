@@ -228,7 +228,9 @@ def main():
             try:
                 available_models = ollama_api.list_models()
             except ConnectionError:
-                available_models = list(provider.models.keys())
+                console.print("[red]ERROR: No se pudieron verificar los modelos.[/red]")
+                console.print("Usa el modo interactivo sin --model para seleccionar.")
+                sys.exit(1)
 
             if args.model not in available_models:
                 console.print(f"\n[red]ERROR: El modelo '{args.model}' no está disponible.[/red]")

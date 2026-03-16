@@ -6,6 +6,7 @@ from rich.console import Console
 from rich.table import Table
 from rich.prompt import Prompt, Confirm
 from rich.panel import Panel
+from rich.box import SIMPLE
 from rich.layout import Layout
 from rich.live import Live
 
@@ -38,15 +39,12 @@ def show_main_menu(config: ConfigWrapper):
     table.add_column("ID", style="cyan", width=3)
     table.add_column("Provider", style="blue")
     table.add_column("URL", style="green")
-    table.add_column("Modelos", style="white")
 
     for idx, (name, provider) in enumerate(sorted(providers.items()), 1):
-        models = ", ".join(m.name for m in provider.models.values()) if provider.models else "—"
         table.add_row(
             str(idx),
             name.capitalize(),
-            provider.options.base_url.split(":")[0],
-            f"[{len(provider.models)} modelos]" if models != "—" else "Sin especificar"
+            provider.options.base_url.split(":")[0]
         )
 
     console.print()
@@ -58,47 +56,34 @@ def show_main_menu(config: ConfigWrapper):
 
 
 def show_provider_models(provider: ProviderConfig):
-    """Mostrar modelos disponibles de un provider."""
-    models = list(provider.models.keys())
+    """Mostrar modelos disponibles de un provider en una tabla numerada."""
+    try:
+        ollama_api = OllamaAPI(
+            provider.options.base_url,
+            provider.options.api_key
+        )
+        models = ollama_api.list_models()
+    except ConnectionError as e:
+        console.print(Panel(
+            f"❌ Error conectando con el endpoint:\n{e}",
+            title="Error de Conexión",
+            border_style="red"
+        ))
+        return
 
     if not models:
-        # Intentar obtener desde API en tiempo real
-        try:
-            ollama_api = OllamaAPI(
-                provider.options.base_url,
-                provider.options.api_key
-            )
-            models = ollama_api.list_models()
+        console.print("\n[red]ERROR: No hay modelos disponibles.[/red]")
+        return
 
-            if models:
-                console.print(
-                    Panel(
-                        "Modelos obtenidos desde API:\n" + "\n".join(f"  • {m}" for m in models),
-                        title="📦 Modelos Disponibles",
-                        border_style="green"
-                    )
-                )
-
-        except ConnectionError as e:
-            console.print(Panel(
-                f"❌ Error conectando con el endpoint:\n{e}",
-                title="Error de Conexión",
-                border_style="red"
-            ))
-            models = []
-
-    if not models:
-        # Usar modelos configurados si no hay API
-        models = list(provider.models.keys()) or ["(sin modelos especificados)"]
-
-    table = Table(show_header=True, header_style="bold cyan")
-    table.add_column("#", style="dim", width=3)
+    # Crear tabla numerada
+    table = Table(show_header=False, box=SIMPLE)
+    table.add_column("#", style="cyan", width=5)
     table.add_column("Modelo", style="white")
 
     for idx, model_name in enumerate(models, 1):
         table.add_row(str(idx), model_name)
 
-    console.print(Panel(table, title=f"📦 Modelos de {provider.options.base_url}"))
+    console.print(Panel(table, title="📦 Modelos Disponibles", border_style="green"))
 
 
 def select_model(provider: ProviderConfig) -> Optional[str]:
@@ -114,16 +99,16 @@ def select_model(provider: ProviderConfig) -> Optional[str]:
         )
         available_models = ollama_api.list_models()
     except ConnectionError:
-        available_models = list(provider.models.keys()) or []
+        console.print("\n[red]ERROR: No se pudieron cargar los modelos del provider.[/red]")
+        console.print("Verifica que Ollama esté corriendo y sea accesible.")
+        return None
 
     if not available_models:
         console.print("\n[red]ERROR: No hay modelos disponibles.[/red]")
         return None
 
-    # Mostrar opciones
-    for idx, model in enumerate(available_models, 1):
-        console.print(f"  [cyan]{idx}:[/cyan] {model}")
-
+    # Usar la lista ya mostrada por show_provider_models, no repetirla
+    # Mostrar solo la solicitud de selección
     while True:
         choice = Prompt.ask(
             "\nSelecciona un modelo",
@@ -244,11 +229,12 @@ def run_provider_selection(provider: ProviderConfig, dangerously_skip_permission
         available_models = ollama_api.list_models()
     except ConnectionError as e:
         console.print(Panel(
-            f"WARNING: No se pudo conectar al endpoint:\n{e}\n\nUsando modelos configurados.",
-            title="Advertencia",
-            border_style="yellow"
+            f"ERROR: No se pudo conectar al endpoint:\n{e}",
+            title="Error de Conexión",
+            border_style="red"
         ))
-        available_models = list(provider.models.keys())
+        console.print("[yellow]No se pueden cargar los modelos sin conexión al provider.[/yellow]")
+        return
 
     if not available_models:
         console.print("[red]ERROR: No hay modelos disponibles.[/red]")
@@ -345,37 +331,15 @@ def run_new_provider():
         default="ollama"
     )
 
-    # Preguntar si hay modelos específicos
-    has_models = Confirm.ask(
-        "\n¿Vas a agregar modelos ahora?",
-        default=True
-    )
-
-    models_dict = {}
-    if has_models:
-        console.print("\n[bold]Agregar Modelos:[/bold]")
-        while True:
-            model_name = Prompt.ask("📦 [bold]Nombre del modelo[/bold]", default="")
-
-            if not model_name:
-                break
-
-            models_dict[model_name] = {"name": model_name}
-
-            add_more = Confirm.ask("\n¿Agregar otro modelo?", default=False)
-            if not add_more:
-                break
-
-    # Crear y guardar provider
+    # Crear y guardar provider (sin modelos - se fetchearán desde API)
     provider_config = ProviderConfig(
         type="ollama",
         options={"base_url": base_url, "apiKey": api_key},
-        models=models_dict
+        models={}  # models no se guarda, se fetchea en tiempo de ejecución
     )
 
     config.add_provider(name, provider_config)
 
     console.print(f"\n[bold green]✓ Provider '{name}' agregado exitosamente![/bold green]")
     console.print(f"📍 URL: {base_url}")
-    if models_dict:
-        console.print(f"📦 Modelos: {', '.join(models_dict.keys())}")
+    console.print("[dim]Los modelos se cargarán automáticamente desde el provider[/dim]")
