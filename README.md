@@ -2,7 +2,7 @@
 
 Lanzador de **Claude Code** con soporte para múltiples providers Ollama.
 
-Similar a `cl mole` y `cl chati` que tienes en OpenCode, pero adaptado para Claude Code.
+Similar a `ccl mole` y `ccl chati` que tienes en OpenCode, pero adaptado para Claude Code.
 
 ## 📋 Requisitos
 
@@ -21,10 +21,10 @@ cd claude-launch
 ./install.sh all
 
 # Usar el CLI
-./scripts/cl mole          # Selecciona un modelo e interactúa con Claude
-./scripts/cl chati         # Otro provider distinto
-./scripts/cl mole --model mistral:latest  # Directo a un modelo específico
-./scripts/cl --new         # Agregar nuevo provider
+./scripts/ccl mole          # Selecciona un modelo e interactúa con Claude
+./scripts/ccl chati         # Otro provider distinto
+./scripts/ccl mole --model mistral:latest  # Directo a un modelo específico
+./scripts/ccl --new         # Agregar nuevo provider
 ```
 
 ## 🛠️ Estructura del Proyecto
@@ -45,8 +45,8 @@ claude-launch/
 │       ├── cli.py          # Interfaz interactiva con Rich
 │       └── main.py         # Entry point CLI
 ├── scripts/
-│   ├── cl                  # Wrapper para Linux/macOS
-│   └── cl.bat              # Wrapper para Windows
+│   ├── ccl                  # Wrapper para Linux/macOS
+│   └── ccl.bat              # Wrapper para Windows
 ```
 
 ## 🔧 Configuración
@@ -82,25 +82,25 @@ El archivo `config.json` sigue el formato de OpenCode:
 
 | Comando | Descripción |
 |---------|-------------|
-| `./scripts/cl` | Muestra la ayuda y providers disponibles |
-| `./scripts/cl <provider>` | Lista modelos e interactúa con Claude |
-| `./scripts/cl <provider> --model <name>` | Lanza directo a un modelo específico |
-| `./scripts/cl --new` | Asistente para agregar nuevo provider |
+| `./scripts/ccl` | Muestra la ayuda y providers disponibles |
+| `./scripts/ccl <provider>` | Lista modelos e interactúa con Claude |
+| `./scripts/ccl <provider> --model <name>` | Lanza directo a un modelo específico |
+| `./scripts/ccl --new` | Asistente para agregar nuevo provider |
 
 ### Ejemplos de Uso
 
 ```bash
 # Interactivo - selecciona un modelo
-./scripts/cl mole
+./scripts/ccl mole
 
 # Directo a modelo específico
-./scripts/cl chati --model qwen3.5:122b
+./scripts/ccl chati --model qwen3.5:122b
 
 # Agregar nuevo provider
-./scripts/cl --new
+./scripts/ccl --new
 
 # Con config personalizado
-./scripts/cl --config /ruta/a/config.json mole
+./scripts/ccl --config /ruta/a/config.json mole
 ```
 
 ## 📦 Compilación a Binary
@@ -115,8 +115,8 @@ pip install pyinstaller
 ./build.sh
 
 # Output generado:
-# - dist/cl    - Binary ejecutable para Linux/macOS
-# - dist/cl.exe - Binary ejecutable para Windows
+# - dist/ccl    - Binary ejecutable para Linux/macOS
+# - dist/ccl.exe - Binary ejecutable para Windows
 ```
 
 ## 🧪 Desarrollo
@@ -147,7 +147,7 @@ Para recrear este proyecto desde cero en otra sesión:
    - `pyproject.toml` - Configuración del proyecto y dependencias
    - `config.json` - Tu configuración de providers (la que ya tienes)
    - `src/claude_launch/` - Todos los módulos Python
-   - `scripts/cl` y `scripts/cl.bat` - Wrappers para ejecutar el CLI
+   - `scripts/ccl` y `scripts/ccl.bat` - Wrappers para ejecutar el CLI
    - `install.sh` - Script de instalación con uv
    - `build.sh` - Script de compilación con pyinstaller
 
@@ -159,14 +159,14 @@ Para recrear este proyecto desde cero en otra sesión:
 4. **Verifica que funciona:**
    ```bash
    # Deberías ver el menú o información del CLI
-   ./scripts/cl --help
-   ./scripts/cl mole  # (si tienes el provider mole configurado)
+   ./scripts/ccl --help
+   ./scripts/ccl mole  # (si tienes el provider mole configurado)
    ```
 
 5. **(Opcional) Compila a binary:**
    ```bash
    ./build.sh auto
-   # Esto generará el ejecutable 'cl'
+   # Esto generará el ejecutable 'ccl'
    ```
 
 ## 📝 Notas importantes

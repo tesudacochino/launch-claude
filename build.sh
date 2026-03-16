@@ -10,7 +10,7 @@ python3 -m pip install -e ".[dev]"
 
 echo "Compilando con PyInstaller..."
 mkdir -p dist
-pyinstaller --onefile --console --name cl src/claude_launch/main.py
+pyinstaller --onefile --console --name ccl src/claude_launch/main.py
 
-chmod +x dist/cl
-echo "Binary creado: dist/cl"
+chmod +x dist/ccl
+echo "Binary creado: dist/ccl"

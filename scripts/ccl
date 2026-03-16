@@ -1,0 +1,14 @@
+#!/usr/bin/env python3
+"""Script wrapper para ejecutar Claude Launch desde Linux/macOS."""
+
+import sys
+from pathlib import Path
+
+# Añadir el directorio src al path de Python
+script_dir = Path(__file__).parent.parent
+sys.path.insert(0, str(script_dir / "src"))
+
+from claude_launch.main import main
+
+if __name__ == "__main__":
+    main()
