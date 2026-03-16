@@ -34,7 +34,7 @@ claude-launch/
 ├── pyproject.toml          # Metadatos + dependencias
 ├── config.json             # Configuración de providers (tuya)
 ├── install.sh              # Script de instalación con uv
-├── build.sh                # Compilación a binary con nuitka
+├── build.sh                # Compilación a binary con pyinstaller
 ├── README.md               # Este archivo
 ├── src/
 │   └── claude_launch/
@@ -105,25 +105,19 @@ El archivo `config.json` sigue el formato de OpenCode:
 
 ## 📦 Compilación a Binary
 
-### Usando Nuitka
+### Usando PyInstaller
 
 ```bash
-# Instalar nuitka
-uv pip install nuitka
+# Instalar pyinstaller
+pip install pyinstaller
 
 # Compilar para tu sistema actual
-./build.sh auto
+./build.sh
 
-# Compilar específicamente para Linux
-./build.sh linux
-
-# Compilar para Windows (cross-compilation desde Linux/WSL)
-./build.sh windows
+# Output generado:
+# - dist/cl    - Binary ejecutable para Linux/macOS
+# - dist/cl.exe - Binary ejecutable para Windows
 ```
-
-### Output generado:
-- `cl` - Binary ejecutable para Linux/macOS
-- `cl.exe` - Binary ejecutable para Windows
 
 ## 🧪 Desarrollo
 
@@ -155,7 +149,7 @@ Para recrear este proyecto desde cero en otra sesión:
    - `src/claude_launch/` - Todos los módulos Python
    - `scripts/cl` y `scripts/cl.bat` - Wrappers para ejecutar el CLI
    - `install.sh` - Script de instalación con uv
-   - `build.sh` - Script de compilación con nuitka
+   - `build.sh` - Script de compilación con pyinstaller
 
 3. **Ejecuta la instalación:**
    ```bash
