@@ -134,15 +134,13 @@ def _get_executable_path() -> Path:
     """Obtener la ruta del ejecutable (no del archivo temporal de PyInstaller)."""
     if hasattr(sys, '_MEIPASS') and sys._MEIPASS:
         # PyInstaller usa _MEIPASS para archivos extraídos
-        # Pero queremos el directorio donde está el ejecutable real
-        if hasattr(sys, '_MEIPASS_ORIGIN'):
-            # Algunas versiones lo usan para el ejecutable original
-            return Path(sys.executable).parent
         return Path(sys.executable).parent
-    # Ejecución normal o desde script
+    # Ejecución con PyInstaller sin _MEIPASS o script congelado
     if getattr(sys, 'frozen', False):
         return Path(sys.executable).parent
-    return Path(sys.argv[0]).parent.resolve()
+    # Ejecución normal desde script
+    # Usar sys.executable para obtener la ruta correcta independientemente del cwd
+    return Path(sys.executable).parent.resolve()
 
 
 def _get_config_path() -> Path:
@@ -152,9 +150,8 @@ def _get_config_path() -> Path:
     Si no existe, se crea en ese lugar.
 
     Prioridad:
-    1. config.json en el mismo directorio que el ejecutable
-    2. config.json en el directorio actual (cwd)
-    3. ~/.claude/launch-config.json
+    1. config.json en el mismo directorio que el ejecutable (cl.exe)
+    2. ~/.claude/launch-config.json (fallback)
     """
     exe_path = _get_executable_path()
 
