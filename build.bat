@@ -41,7 +41,7 @@ echo.
 REM Compilar con PyInstaller
 %PYTHON_CMD% -m PyInstaller --clean ^
     --onefile ^
-    --name=cl ^
+    --name=ccl ^
     --hidden-import=claude_launch.config ^
     --hidden-import=claude_launch.cli ^
     --hidden-import=claude_launch.ollama_api ^
@@ -65,15 +65,15 @@ echo.
 echo ====================================================
 echo  BUILD SUCCESSFUL
 echo ====================================================
-echo  Output: dist/cl.exe
+echo  Output: dist/ccl.exe
 echo ====================================================
 echo.
 
-if exist dist\cl.exe (
+if exist dist\ccl.exe (
     echo Binary size:
-    dir dist\cl.exe | find "cl.exe"
+    dir dist\ccl.exe | find "ccl.exe"
     echo.
-    echo To test the binary, run: dist\cl.exe --help
+    echo To test the binary, run: dist\ccl.exe --help
 )
 
 rem pause
