@@ -42,7 +42,6 @@ REM Compilar con PyInstaller
 %PYTHON_CMD% -m PyInstaller --clean ^
     --onefile ^
     --name=cl ^
-    --add-data="config.json;." ^
     --hidden-import=claude_launch.config ^
     --hidden-import=claude_launch.cli ^
     --hidden-import=claude_launch.ollama_api ^
