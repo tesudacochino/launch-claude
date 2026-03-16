@@ -23,13 +23,13 @@ jobs:
       - name: Build Windows binary
         run: |
           python -m pip install -e .
-          python -m PyInstaller --clean --onefile --name=cl --console --noconfirm src/claude_launch/main.py
+          python -m PyInstaller --clean --onefile --name=ccl --console --noconfirm src/claude_launch/main.py
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cl-windows
-          path: dist/cl.exe
+          name: ccl-windows
+          path: dist/ccl.exe
 
   build-linux:
     runs-on: ubuntu-latest
@@ -48,13 +48,13 @@ jobs:
       - name: Build Linux binary
         run: |
           python -m pip install -e .
-          python -m PyInstaller --clean --onefile --name=cl --console --noconfirm src/claude_launch/main.py
+          python -m PyInstaller --clean --onefile --name=ccl --console --noconfirm src/claude_launch/main.py
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cl-linux
-          path: dist/cl
+          name: ccl-linux
+          path: dist/ccl
 
   build-macos:
     runs-on: macos-latest
@@ -73,13 +73,13 @@ jobs:
       - name: Build macOS binary
         run: |
           python -m pip install -e .
-          python -m PyInstaller --clean --onefile --name=cl --console --noconfirm src/claude_launch/main.py
+          python -m PyInstaller --clean --onefile --name=ccl --console --noconfirm src/claude_launch/main.py
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cl-macos
-          path: dist/cl
+          name: ccl-macos
+          path: dist/ccl
 
   release:
     needs: [build-windows, build-linux, build-macos]
@@ -93,7 +93,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
-          pattern: cl-*
+          pattern: ccl-*
           merge-multiple: false
 
       - name: List artifacts
@@ -104,9 +104,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            artifacts/cl-windows/cl.exe
-            artifacts/cl-linux/cl
-            artifacts/cl-macos/cl
+            artifacts/ccl-windows/ccl.exe
+            artifacts/ccl-linux/ccl
+            artifacts/ccl-macos/ccl
           draft: false
           generate_release_notes: true
         env:
