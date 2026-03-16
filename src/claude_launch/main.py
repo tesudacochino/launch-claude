@@ -218,7 +218,7 @@ def main():
 
         if args.model:
             # Verificar que el modelo existe antes de lanzar
-            from .ollama_api import OllamaAPI
+            from claude_launch.ollama_api import OllamaAPI
             ollama_api = OllamaAPI(
                 provider.options.base_url,
                 provider.options.api_key
@@ -238,7 +238,7 @@ def main():
                 sys.exit(1)
 
             # Lanzar Claude directamente con el modelo especificado
-            from .launcher import ClaudeLauncher
+            from claude_launch.launcher import ClaudeLauncher
             launcher = ClaudeLauncher(
                 provider.options.base_url,
                 provider.options.api_key,
@@ -250,7 +250,7 @@ def main():
             sys.exit(exit_code)
         else:
             # Modo interactivo - mostrar lista y seleccionar
-            from .cli import run_provider_selection
+            from claude_launch.cli import run_provider_selection
             run_provider_selection(provider, extra_args=args.extra_args)
 
     else:
