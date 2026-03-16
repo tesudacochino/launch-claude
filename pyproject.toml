@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [project.scripts]
-cl = "claude_launch.main:main"
+ccl = "claude_launch.main:main"
 
 [build-system]
 requires = ["hatchling"]

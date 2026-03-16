@@ -24,34 +24,34 @@ python -m claude_launch.main [provider] [--model <name>]
 ### Running the CLI
 ```bash
 # Show help
-./scripts/cl
-./scripts/cl --help
+./scripts/ccl
+./scripts/ccl --help
 
 # List models and select interactively
-./scripts/cl mole
-./scripts/cl chati
+./scripts/ccl mole
+./scripts/ccl chati
 
 # Launch directly with a specific model
-./scripts/cl mole --model mistral:latest
-./scripts/cl chati --model qwen3.5:35b
+./scripts/ccl mole --model mistral:latest
+./scripts/ccl chati --model qwen3.5:35b
 
 # Add a new provider via interactive assistant
-./scripts/cl --new
+./scripts/ccl --new
 
 # List all configured providers
-./scripts/cl --list
-./scripts/cl -l
+./scripts/ccl --list
+./scripts/ccl -l
 
 # Remove a provider
-./scripts/cl --remove <provider>
-./scripts/cl -r <provider>
+./scripts/ccl --remove <provider>
+./scripts/ccl -r <provider>
 
 # Use custom config file
-./scripts/cl --config /path/to/config.json [provider]
+./scripts/ccl --config /path/to/config.json [provider]
 
 # Pass flags directly to Claude Code (after --)
-./scripts/cl mole --model mistral:latest -- --dangerously-skip-permissions
-./scripts/cl mole --model qwen3.5:35b -- --verbose --timeout=60
+./scripts/ccl mole --model mistral:latest -- --dangerously-skip-permissions
+./scripts/ccl mole --model qwen3.5:35b -- --verbose --timeout=60
 ```
 
 ### Build and Compilation
@@ -59,7 +59,7 @@ python -m claude_launch.main [provider] [--model <name>]
 # Compile to binary using PyInstaller (requires pyinstaller installed)
 ./build.sh
 
-# Output: 'dist/cl' or 'dist/cl.exe' single-file executable
+# Output: 'dist/ccl' or 'dist/ccl.exe' single-file executable
 ```
 
 ### Testing and Linting
@@ -93,8 +93,8 @@ claude-launch/
 │   ├── ollama_api.py       # Ollama API client for model listing and connection testing
 │   └── launcher.py         # Subprocess launcher for Claude Code with env vars
 ├── scripts/                # CLI wrappers
-│   ├── cl                  # Linux/macOS wrapper script
-│   └── cl.bat              # Windows batch wrapper
+│   ├── ccl                  # Linux/macOS wrapper script
+│   └── ccl.bat              # Windows batch wrapper
 ├── install.sh              # Installation script using pip
 └── build.sh                # Binary compilation script using PyInstaller
 ```
@@ -155,17 +155,17 @@ Key points:
 
 - Package imports use `.claude_launch.*` relative syntax (e.g., `from .config import ConfigWrapper`)
 - Virtual environment at `.venv/` created via `uv venv .venv`
-- Binary builds output to repo root as single-file executables (`cl` or `cl.exe`)
+- Binary builds output to repo root as single-file executables (`ccl` or `ccl.exe`)
 
 ## Development Workflow
 
 1. **Modify code**: Edit files under `src/claude_launch/`
 2. **Test locally**: Activate venv and run `python -m claude_launch.main [args]`
-3. **Add provider**: Use `./scripts/cl --new` or edit `config.json` directly
+3. **Add provider**: Use `./scripts/ccl --new` or edit `config.json` directly
 4. **Build binary**: Run `./build.sh auto` to compile standalone executable
 
 ## Notes
 
 - The `install.sh` script uses `pip` (not `uv`) for dependency installation
-- The `build.sh` script compiles with PyInstaller to a single executable named `cl` (or `cl.exe` on Windows)
+- The `build.sh` script compiles with PyInstaller to a single executable named `ccl` (or `ccl.exe` on Windows)
 - Configuration is loaded from `config.json` in the same directory as the executable when running as a binary
