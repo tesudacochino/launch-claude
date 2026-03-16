@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Development Setup
 ```bash
-# Full installation with uv (dependencies + config)
+# Full installation (dependencies + config)
 ./install.sh all
 
 # Install dependencies only
@@ -23,9 +23,9 @@ python -m claude_launch.main [provider] [--model <name>]
 
 ### Running the CLI
 ```bash
-# Mostrar help
-./scripts/cl                           # Muestra help de uso
-./scripts/cl --help                    # Muestra help de uso
+# Show help
+./scripts/cl
+./scripts/cl --help
 
 # List models and select interactively
 ./scripts/cl mole
@@ -33,33 +33,51 @@ python -m claude_launch.main [provider] [--model <name>]
 
 # Launch directly with a specific model
 ./scripts/cl mole --model mistral:latest
-./scripts/cl chati --model qwen3.5:122b
+./scripts/cl chati --model qwen3.5:35b
 
 # Add a new provider via interactive assistant
 ./scripts/cl --new
+
+# List all configured providers
+./scripts/cl --list
+./scripts/cl -l
+
+# Remove a provider
+./scripts/cl --remove <provider>
+./scripts/cl -r <provider>
 
 # Use custom config file
 ./scripts/cl --config /path/to/config.json [provider]
 
 # Pass flags directly to Claude Code (after --)
 ./scripts/cl mole --model mistral:latest -- --dangerously-skip-permissions
-./scripts/cl mole --model qwen3.5:122b -- --verbose --timeout=60
+./scripts/cl mole --model qwen3.5:35b -- --verbose --timeout=60
 ```
 
 ### Build and Compilation
 ```bash
-# Compile to binary using Nuitka (requires nuitka installed)
-./build.sh auto      # Auto-detect platform
-./build.sh linux     # Linux/macOS binary
-./build.sh windows   # Windows cross-compilation
+# Compile to binary using PyInstaller (requires pyinstaller installed)
+./build.sh
 
-# Output: 'cl' or 'cl.exe' single-file executable
+# Output: 'dist/cl' or 'dist/cl.exe' single-file executable
 ```
 
 ### Testing and Linting
 - No formal test suite exists yet
 - Run via: `python -m claude_launch.main --help` to verify CLI works
 - Dependencies are managed via `pyproject.toml` with hatchling build system
+
+## Environment Variables
+
+When launching Claude Code, the following environment variables are set:
+- `ANTHROPIC_BASE_URL`: URL del endpoint Ollama
+- `ANTHROPIC_AUTH_TOKEN`: API key de autenticación
+- `ANTHROPIC_DEFAULT_HAIKU_MODEL`: Modelo por defecto para Haiku
+- `ANTHROPIC_DEFAULT_OPUS_MODEL`: Modelo por defecto para Opus
+- `ANTHROPIC_DEFAULT_SONNET_MODEL`: Modelo por defecto para Sonnet
+- `ANTHROPIC_INSECURE_HTTP`: "1" (habilita HTTP sin SSL)
+- `NODE_TLS_REJECT_UNAUTHORIZED`: "0" (acepta certificados no válidos)
+- `OLLAMA_HOST`: "" (evita conflictos con Ollama local)
 
 ## High-Level Architecture
 
@@ -77,8 +95,8 @@ claude-launch/
 ├── scripts/                # CLI wrappers
 │   ├── cl                  # Linux/macOS wrapper script
 │   └── cl.bat              # Windows batch wrapper
-├── install.sh              # Installation script using uv
-└── build.sh                # Binary compilation script using Nuitka
+├── install.sh              # Installation script using pip
+└── build.sh                # Binary compilation script using PyInstaller
 ```
 
 ## Core Components
@@ -102,7 +120,8 @@ claude-launch/
 
 ### Launcher (`launcher.py`)
 - `ClaudeLauncher` sets up environment variables and spawns Claude Code subprocess
-- Injects `ANTHROPIC_BASE_URL` and `ANTHROPIC_API_KEY` per-provider
+- Injects `ANTHROPIC_BASE_URL` and `ANTHROPIC_AUTH_TOKEN` per-provider
+- Also sets `ANTHROPIC_DEFAULT_HAIKU_MODEL`, `ANTHROPIC_DEFAULT_OPUS_MODEL`, `ANTHROPIC_DEFAULT_SONNET_MODEL`
 - Supports optional `--model` argument passing to Claude Code CLI
 
 ## Configuration Format
@@ -113,10 +132,10 @@ Providers are stored directly at the root of `config.json`:
 {
   "mole": {
     "type": "ollama",
-    "name": "mole",
+    "name": "localhost",
     "options": {
-      "baseURL": "http://127.0.0.1:11434/v1",
-      "apiKey": "ollama"
+      "base_url": "http://127.0.0.1:11434/v1",
+      "api_key": "ollama"
     },
     "models": {
       "mistral:latest": {"name": "mistral:latest"},
@@ -128,7 +147,8 @@ Providers are stored directly at the root of `config.json`:
 
 Key points:
 - Provider name is the JSON key (e.g., `"mole"`)
-- `baseURL` derives the provider identifier from hostname
+- `base_url` (snake_case) or `baseURL` (camelCase) are both supported
+- `api_key` (snake_case), `apiKey` (camelCase) or `api_key` are both supported
 - Models dict allows pre-specifying available models (optional - can be fetched at runtime)
 
 ## File Structure Notes
@@ -143,3 +163,9 @@ Key points:
 2. **Test locally**: Activate venv and run `python -m claude_launch.main [args]`
 3. **Add provider**: Use `./scripts/cl --new` or edit `config.json` directly
 4. **Build binary**: Run `./build.sh auto` to compile standalone executable
+
+## Notes
+
+- The `install.sh` script uses `pip` (not `uv`) for dependency installation
+- The `build.sh` script compiles with PyInstaller to a single executable named `cl` (or `cl.exe` on Windows)
+- Configuration is loaded from `config.json` in the same directory as the executable when running as a binary

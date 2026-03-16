@@ -9,6 +9,7 @@ dependencies = [
     "pydantic>=2.5.0",
     "requests>=2.31.0",
     "click>=8.1.7",
+    "pyinstaller>=6.0.0",
 ]
 
 [project.scripts]
@@ -20,10 +21,3 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/claude_launch"]
-
-[tool.nuitka]
-# Configuración para compilación con nuitka
-output-format = "binary"
-onefile = true
-strip = true
-linux-python-subdir = "python3"
