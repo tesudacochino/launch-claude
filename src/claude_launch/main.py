@@ -132,7 +132,8 @@ def main():
     args.config = getattr(args, 'config', None)
 
     # Cargar configuración
-    config_path = args.config or "config.json"
+    # Usar el path pasado por --config o None para usar el default (_get_config_path)
+    config_path = args.config
     try:
         config = ConfigWrapper(config_path)
     except FileNotFoundError:
