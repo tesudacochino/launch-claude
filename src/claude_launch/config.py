@@ -148,33 +148,24 @@ def _get_executable_path() -> Path:
 def _get_config_path() -> Path:
     """Obtener la ruta del archivo de configuración.
 
+    El config.json debe estar en el mismo directorio que el ejecutable.
+    Si no existe, se crea en ese lugar.
+
     Prioridad:
     1. config.json en el mismo directorio que el ejecutable
-    2. config.json en el directorio padre del ejecutable (para dist/ vs root)
-    3. config.json en el directorio actual (cwd)
-    4. ~/.claude/launch-config.json
+    2. config.json en el directorio actual (cwd)
+    3. ~/.claude/launch-config.json
     """
     exe_path = _get_executable_path()
 
-    # Primero: config.json en el directorio del ejecutable
+    # Primero: config.json en el directorio del ejecutable (mismo lugar que cl.exe)
     exe_config = exe_path / "config.json"
-    if exe_config.exists():
-        return exe_config
+    # Si no existe, lo creamos vacío para que el usuario pueda editar lo que necesite
+    if not exe_config.exists():
+        exe_config.parent.mkdir(parents=True, exist_ok=True)
+        exe_config.write_text("{}\n")
 
-    # Segundo: config.json en el directorio padre (para estructura dist/)
-    parent_config = exe_path.parent / "config.json"
-    if parent_config.exists():
-        return parent_config
-
-    # Tercero: config.json en el directorio actual (cwd)
-    cwd_config = Path.cwd() / "config.json"
-    if cwd_config.exists():
-        return cwd_config
-
-    # Cuarto: config.json en el directorio del usuario
-    user_config = Path.home() / ".claude" / "launch-config.json"
-    user_config.parent.mkdir(parents=True, exist_ok=True)
-    return user_config
+    return exe_config.resolve()
 
 
 class ConfigWrapper:
@@ -185,7 +176,7 @@ class ConfigWrapper:
         if path is None:
             path = _get_config_path()
 
-        self.path = Path(path)
+        self.path = Path(path).resolve()
         self._data: dict[str, dict] = {}
 
         if self.path.exists():
@@ -251,6 +242,9 @@ class ConfigWrapper:
             for key in ["$schema", "share", "tools"]:
                 if key in original:
                     data[key] = original[key]
+
+        # Asegurar que el directorio existe
+        self.path.parent.mkdir(parents=True, exist_ok=True)
 
         with open(self.path, "w") as f:
             json.dump(data, f, indent=2)

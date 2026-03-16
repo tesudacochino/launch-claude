@@ -77,4 +77,4 @@ if exist dist\cl.exe (
     echo To test the binary, run: dist\cl.exe --help
 )
 
-pause
+rem pause
