@@ -33,23 +33,23 @@ def main():
     """Entrada principal del programa.
 
     Uso:
-        cl                              - Muestra menú principal
-        cl <provider>                   - Listar y seleccionar modelos de un provider
-        cl <provider> --model <name>    - Lanzar Claude con modelo específico
-        cl <provider> --model <name> -- --flag  - Pasar flags a Claude Code
-        cl --new                        - Agregar nuevo provider
-        cl --list                       - Listar todos los providers configurados
-        cl -r <provider>                - Eliminar un provider existente
-        cl --help                       - Mostrar ayuda
+        ccl                             - Muestra menú principal
+        ccl <provider>                  - Listar y seleccionar modelos de un provider
+        ccl <provider> --model <name>   - Lanzar Claude con modelo específico
+        ccl <provider> --model <name> -- --flag  - Pasar flags a Claude Code
+        ccl --new                       - Agregar nuevo provider
+        ccl --list                      - Listar todos los providers configurados
+        ccl -r <provider>               - Eliminar un provider existente
+        ccl --help                      - Mostrar ayuda
 
     Ejemplos:
-        cl mole --model qwen3.5:35b
-        cl mole --model qwen3.5:35b -- --dangerously-skip-permissions
-        cl chati --model mistral:latest -- --verbose --timeout=60
-        cl -r pp                        # Eliminar provider 'pp'
+        ccl mole --model qwen3.5:35b
+        ccl mole --model qwen3.5:35b -- --dangerously-skip-permissions
+        ccl chati --model mistral:latest -- --verbose --timeout=60
+        ccl -r pp                       # Eliminar provider 'pp'
     """
     parser = argparse.ArgumentParser(
-        prog="cl",
+        prog="ccl",
         description="Claude Launch - Lanza Claude Code con múltiples providers Ollama"
     )
 
@@ -139,7 +139,7 @@ def main():
     except FileNotFoundError:
         console.print(Panel(
             f"[red]ERROR: No se encontró el archivo de configuración en: {config_path}[/red]\n\n"
-            "Ejecuta [bold]cl --new[/bold] para crear uno nuevo.",
+            "Ejecuta [bold]ccl --new[/bold] para crear uno nuevo.",
             title="Error",
             border_style="red"
         ))
@@ -184,7 +184,7 @@ def main():
         if not config.providers:
             console.print(Panel(
                 "[yellow]No hay providers configurados.[/yellow]\n\n"
-                "Ejecuta [bold]cl --new[/bold] para agregar uno.",
+                "Ejecuta [bold]ccl --new[/bold] para agregar uno.",
                 title="Providers",
                 border_style="yellow"
             ))
