@@ -200,7 +200,11 @@ def main():
 
     if args.new:
         # Modo agregar nuevo provider
-        run_new_provider()
+        try:
+            run_new_provider()
+        except KeyboardInterrupt:
+            console.print("\n[yellow]Operación cancelada por el usuario.[/yellow]")
+            sys.exit(0)
         return
 
     if args.provider:
@@ -249,12 +253,24 @@ def main():
                 dangerously_skip_permissions=False,  # Ya está en extra_args si se pasó -d
                 extra_args=args.extra_args
             )
-            exit_code = launcher.launch_interactive()
-            sys.exit(exit_code)
+            try:
+                exit_code = launcher.launch_interactive()
+                sys.exit(exit_code)
+            except RuntimeError as e:
+                console.print(Panel(
+                    f"[red]ERROR:[/red] [bold]{e}[/bold]",
+                    title="Claude Code no instalado",
+                    border_style="red"
+                ))
+                sys.exit(1)
         else:
             # Modo interactivo - mostrar lista y seleccionar
             from claude_launch.cli import run_provider_selection
-            run_provider_selection(provider, extra_args=args.extra_args)
+            try:
+                run_provider_selection(provider, extra_args=args.extra_args)
+            except KeyboardInterrupt:
+                console.print("\n[yellow]Operación cancelada por el usuario.[/yellow]")
+                sys.exit(0)
 
     else:
         # Sin argumentos - mostrar help

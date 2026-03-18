@@ -145,30 +145,25 @@ claude-launch/
 
 ## Configuration Format
 
-Providers are stored directly at the root of `config.json`:
+Providers are stored directly at the root of `config.json` (OpenCode-style):
 
 ```json
 {
   "mole": {
     "type": "ollama",
-    "name": "localhost",
     "options": {
       "base_url": "http://127.0.0.1:11434",
       "api_key": "ollama"
     },
-    "models": {
-      "mistral:latest": {"name": "mistral:latest"},
-      "qwen3:32b": {"name": "qwen3:32b"}
-    }
+    "models": {}
   }
 }
 ```
 
-Key points:
+**Key points:**
 - Provider name is the JSON key (e.g., `"mole"`)
-- `base_url` (snake_case) or `baseURL` (camelCase) are both supported
-- `api_key` (snake_case) or `apiKey` (camelCase) are both supported
-- Models dict is optional - models can be fetched at runtime via API
+- `base_url`/`baseURL` and `api_key`/`apiKey` are both supported
+- `models` dict is optional - fetched at runtime via API
 
 ## File Structure Notes
 
@@ -193,3 +188,8 @@ Key points:
 - Configuration is loaded from `config.json` in the same directory as the executable when running as a binary
 - On Windows, `scripts/ccl.bat` handles UTF-8 encoding for emojis and special characters
 - Default `ANTHROPIC_DEFAULT_HAIKU_MODEL`, `ANTHROPIC_DEFAULT_OPUS_MODEL`, `ANTHROPIC_DEFAULT_SONNET_MODEL` are set to the selected model
+
+## Related Documentation
+
+- [README.md](./README.md) - User-facing documentation with quick start and usage examples
+- [DOCUMENTACION_TECNICA.md](./DOCUMENTACION_TECNICA.md) - Technical documentation for developers (architecture, build process, API details)

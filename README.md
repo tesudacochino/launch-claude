@@ -1,182 +1,119 @@
 # Claude Launch 🚀
 
-Lanzador de **Claude Code** con soporte para múltiples providers Ollama.
+Lanzador de **Claude Code** que se conecta a diferentes endpoints Ollama. Usa `ccl` para seleccionar modelos e interactuar con Claude Code desde cualquier proveedor Ollama compatible.
 
-Similar a `ccl mole` y `ccl chati` que tienes en OpenCode, pero adaptado para Claude Code.
-
-## 📋 Requisitos
-
-- Python 3.10+
-- [uv](https://github.com/astral-sh/uv) (gestor de paquetes rápido)
-- Ollama corriendo en los endpoints configurados
-
-## 🚀 Instalación Rápida
+## ⚡ Instalación Rápida
 
 ```bash
 # Clonar el proyecto
 git clone <repo-url>
 cd claude-launch
 
-# Instalar todo (dependencias + configuración inicial)
-./install.sh all
+# Instalar dependencias
+./install.sh           # Linux/macOS
+# o
+install.bat            # Windows
 
-# Usar el CLI
-./scripts/ccl mole          # Selecciona un modelo e interactúa con Claude
-./scripts/ccl chati         # Otro provider distinto
-./scripts/ccl mole --model mistral:latest  # Directo a un modelo específico
-./scripts/ccl --new         # Agregar nuevo provider
+# Empezar a usar
+./scripts/ccl
 ```
 
-## 🛠️ Estructura del Proyecto
+## 🚀 Cómo Usar
 
-```
-claude-launch/
-├── pyproject.toml          # Metadatos + dependencias
-├── config.json             # Configuración de providers (tuya)
-├── install.sh              # Script de instalación con uv
-├── build.sh                # Compilación a binary con pyinstaller
-├── README.md               # Este archivo
-├── src/
-│   └── claude_launch/
-│       ├── __init__.py     # Exportaciones públicas
-│       ├── config.py       # Manejo de configuración
-│       ├── ollama_api.py   # Comunicación con Ollama API
-│       ├── launcher.py     # Ejecución de Claude Code
-│       ├── cli.py          # Interfaz interactiva con Rich
-│       └── main.py         # Entry point CLI
-├── scripts/
-│   ├── ccl                  # Wrapper para Linux/macOS
-│   └── ccl.bat              # Wrapper para Windows
+### Ver todos los providers configurados
+
+```bash
+./scripts/ccl --list
 ```
 
-## 🔧 Configuración
+### Seleccionar un modelo (modo interactivo)
 
-El archivo `config.json` sigue el formato de OpenCode:
+```bash
+./scripts/ccl mole
+# Muestra una lista numerada de modelos disponibles
+# Ingresa el número para seleccionar
+```
+
+### Lanzar directamente con un modelo específico
+
+```bash
+./scripts/ccl mole --model mistral:latest
+./scripts/ccl chati --model qwen3.5:35b
+```
+
+### Agregar un nuevo provider
+
+```bash
+./scripts/ccl --new
+# Asistente interactivo para configurar un nuevo endpoint Ollama
+```
+
+### Usar con un archivo de configuración personalizado
+
+```bash
+./scripts/ccl --config /ruta/a/config.json <provider>
+```
+
+### Pasar flags a Claude Code
+
+```bash
+# Despu\u00e9s de -- todo se pasa a Claude Code
+./scripts/ccl mole --model mistral:latest -- --dangerously-skip-permissions
+./scripts/ccl mole --model qwen3.5:35b -- --verbose --timeout=60
+```
+
+## Comandos Disponibles
+
+| Comando | Descripción |
+|---------|-------------|
+| `./scripts/ccl` | Mostrar ayuda y menú principal |
+| `./scripts/ccl <provider>` | Lista modelos e interactuar con Claude |
+| `./scripts/ccl <provider> --model <name>` | Lanzar modelo específico directamente |
+| `./scripts/ccl --new` | Asistente para agregar nuevo provider |
+| `./scripts/ccl --list` o `-l` | Listar providers configurados |
+| `./scripts/ccl -r <provider>` | Eliminar un provider |
+| `./scripts/ccl --config <path>` | Usar archivo de configuración personalizado |
+
+## 📦 Compilar Binary
+
+Crear un ejecutable auto-contenido:
+
+**Linux/macOS:**
+```bash
+./build.sh
+# Salida: dist/ccl
+```
+
+**Windows:**
+```powershell
+build.bat
+# Salida: dist/ccl.exe
+```
+
+## 📁 Configuración
+
+El archivo `config.json` define los providers:
 
 ```json
 {
   "mole": {
     "type": "ollama",
-    "name": "mole",
     "options": {
       "base_url": "http://127.0.0.1:11434",
       "api_key": "ollama"
     },
-    "models": {
-      "mistral:latest": {"name": "mistral:latest"},
-      "qwen3:32b": {"name": "qwen3:32b"}
-    }
-  },
-  "chati": {
-    "type": "ollama",
-    "options": {
-      "base_url": "http://your-ollama-server:11434",
-      "api_key": "ollama"
-    },
-    "models": { ... }
+    "models": {}
   }
 }
 ```
 
-### Comandos Disponibles
+**Nota:** `models` es opcional - se cargan automáticamente desde el endpoint.
 
-| Comando | Descripción |
-|---------|-------------|
-| `./scripts/ccl` | Muestra la ayuda y providers disponibles |
-| `./scripts/ccl <provider>` | Lista modelos e interactúa con Claude |
-| `./scripts/ccl <provider> --model <name>` | Lanza directo a un modelo específico |
-| `./scripts/ccl --new` | Asistente para agregar nuevo provider |
+## 🔗 Documentación
 
-### Ejemplos de Uso
+- [Documentación Técnica](./DOCUMENTACION_TECNICA.md) - Arquitectura, desarrollo, detalles de configuración
+- [CLAUDE.md](./CLAUDE.md) - Guía para desarrollar en este repositorio con Claude Code
 
-```bash
-# Interactivo - selecciona un modelo
-./scripts/ccl mole
+## Licencia
 
-# Directo a modelo específico
-./scripts/ccl chati --model qwen3.5:122b
-
-# Agregar nuevo provider
-./scripts/ccl --new
-
-# Con config personalizado
-./scripts/ccl --config /ruta/a/config.json mole
-```
-
-## 📦 Compilación a Binary
-
-### Usando PyInstaller
-
-```bash
-# Instalar pyinstaller
-pip install pyinstaller
-
-# Compilar para tu sistema actual
-./build.sh
-
-# Output generado:
-# - dist/ccl    - Binary ejecutable para Linux/macOS
-# - dist/ccl.exe - Binary ejecutable para Windows
-```
-
-## 🧪 Desarrollo
-
-```bash
-# Crear entorno virtual con uv
-uv venv .venv
-source .venv/bin/activate
-
-# Instalar en modo desarrollo
-uv pip install -e ".[dev]"
-
-# Ejecutar directamente (sin wrapper)
-python -m claude_launch.main mole --model mistral:latest
-```
-
-## 🔄 Instrucciones para otra sesión
-
-Para recrear este proyecto desde cero en otra sesión:
-
-1. **Crea el proyecto:**
-   ```bash
-   mkdir claude-launch && cd claude-launch
-   git init
-   ```
-
-2. **Copia los archivos esenciales:**
-   - `pyproject.toml` - Configuración del proyecto y dependencias
-   - `config.json` - Tu configuración de providers (la que ya tienes)
-   - `src/claude_launch/` - Todos los módulos Python
-   - `scripts/ccl` y `scripts/ccl.bat` - Wrappers para ejecutar el CLI
-   - `install.sh` - Script de instalación con uv
-   - `build.sh` - Script de compilación con pyinstaller
-
-3. **Ejecuta la instalación:**
-   ```bash
-   ./install.sh all
-   ```
-
-4. **Verifica que funciona:**
-   ```bash
-   # Deberías ver el menú o información del CLI
-   ./scripts/ccl --help
-   ./scripts/ccl mole  # (si tienes el provider mole configurado)
-   ```
-
-5. **(Opcional) Compila a binary:**
-   ```bash
-   ./build.sh auto
-   # Esto generará el ejecutable 'ccl'
-   ```
-
-## 📝 Notas importantes
-
-1. **Antropik Code API**: El script configura las variables de entorno `ANTHROPIC_BASE_URL` y `ANTHROPIC_API_KEY` para cada provider, permitiendo conectar a endpoints Ollama compatibles con la API de Anthropic.
-
-2. **Seguridad**: Las credenciales de los endpoints se manejan localmente. No se envían datos externos sin tu control explícito.
-
-3. **Cross-platform**: Funciona en Linux, macOS y Windows (WSL o nativo).
-
-## License
-
-MIT License - ver `LICENSE` file included.
+MIT License - ver archivo `LICENSE`.
