@@ -1,8 +1,10 @@
 """Lanzador de Claude Code con configuración específica."""
 
 import os
+import signal
 import subprocess
 import sys
+import shutil
 from typing import Optional
 
 
@@ -44,6 +46,20 @@ class ClaudeLauncher:
             "OLLAMA_HOST": "",
         }
 
+    @staticmethod
+    def _check_claude_installed() -> bool:
+        """Verificar si el comando 'claude' está instalado en el PATH.
+
+        Returns:
+            True si claude está disponible, False en caso contrario
+        """
+        return shutil.which("claude") is not None
+
+    def _signal_handler(self, signum, frame):
+        """Manejar señales de interrupción (Ctrl+C, etc.)."""
+        print("\n\n[interrupción por el usuario]")
+        sys.exit(0)
+
     def launch(self, model: Optional[str] = None) -> subprocess.Popen:
         """Lanzar Claude Code con la configuración actual.
 
@@ -52,9 +68,21 @@ class ClaudeLauncher:
 
         Returns:
             Proceso de Claude Code en ejecución
+
+        Raises:
+            RuntimeError: Si el comando 'claude' no está instalado
         """
         # Usar el modelo pasado o el configurado
         selected_model = model or self.model
+
+        # Verificar que 'claude' está instalado
+        if not self._check_claude_installed():
+            raise RuntimeError(
+                "El comando 'claude' no está instalado.\n\n"
+                "Para usar Claude Launch necesitas instalar Claude Code:\n"
+                "  - Visita: https://claude.ai/download\n"
+                "  - O sigue las instrucciones de instalación en la documentación"
+            )
 
         # Fijar las variables de entorno en el proceso actual ANTES de lanzar Claude
         os.environ["ANTHROPIC_BASE_URL"] = self.base_url
@@ -75,6 +103,10 @@ class ClaudeLauncher:
 
         # Agregar flags adicionales
         cmd.extend(self.extra_args)
+
+        # Registrar manejador de señales para Ctrl+C limpio
+        signal.signal(signal.SIGINT, self._signal_handler)
+        signal.signal(signal.SIGTERM, self._signal_handler)
 
         # Lanzar el proceso heredando las variables de entorno ya configuradas
         process = subprocess.Popen(

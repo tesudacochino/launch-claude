@@ -65,7 +65,7 @@ def show_provider_models(provider: ProviderConfig):
         models = ollama_api.list_models()
     except ConnectionError as e:
         console.print(Panel(
-            f"❌ Error conectando con el endpoint:\n{e}",
+            f"Error conectando con el endpoint:\n{e}",
             title="Error de Conexión",
             border_style="red"
         ))
@@ -110,22 +110,26 @@ def select_model(provider: ProviderConfig) -> Optional[str]:
     # Usar la lista ya mostrada por show_provider_models, no repetirla
     # Mostrar solo la solicitud de selección
     while True:
-        choice = Prompt.ask(
-            "\nSelecciona un modelo",
-            default="cancel"
-        )
-
-        if choice.lower() == "cancel":
-            return None
-
         try:
-            idx = int(choice)
-            if 1 <= idx <= len(available_models):
-                return available_models[idx - 1]
-        except ValueError:
-            pass
+            choice = Prompt.ask(
+                "\nSelecciona un modelo",
+                default="cancel"
+            )
 
-        console.print("[red]Selección inválida, intenta de nuevo.[/red]")
+            if choice.lower() == "cancel":
+                return None
+
+            try:
+                idx = int(choice)
+                if 1 <= idx <= len(available_models):
+                    return available_models[idx - 1]
+            except ValueError:
+                pass
+
+            console.print("[red]Selección inválida, intenta de nuevo.[/red]")
+        except KeyboardInterrupt:
+            console.print("\n[yellow]Cancelado.[/yellow]")
+            return None
 
 
 def add_provider_interactively():
@@ -194,18 +198,21 @@ def run_menu():
 
     config = ConfigWrapper()
 
-    while True:
-        show_main_menu(config)
+    try:
+        while True:
+            show_main_menu(config)
 
-        choice = Prompt.ask(
-            "\nOpción",
-            choices=["1", "2", "3", "c"],
-            default="exit"
-        )
+            choice = Prompt.ask(
+                "\nOpción",
+                choices=["1", "2", "3", "c"],
+                default="exit"
+            )
 
-        if choice == "exit":
-            console.print("\n[bold green]OK: Hasta luego![/bold green]")
-            break
+            if choice == "exit":
+                console.print("\n[bold green]OK: Hasta luego![/bold green]")
+                break
+    except KeyboardInterrupt:
+        console.print("\n[yellow]Operación cancelada por el usuario.[/yellow]")
 
 
 def run_provider_selection(provider: ProviderConfig, dangerously_skip_permissions: bool = False,
@@ -217,66 +224,81 @@ def run_provider_selection(provider: ProviderConfig, dangerously_skip_permission
         dangerously_skip_permissions: Si True, pasa --dangerously-skip-permissions a Claude Code
         extra_args: Lista de flags adicionales a pasar a Claude Code
     """
-    console.print(f"\n[bold]Conectando a {provider.options.base_url}...[/bold]")
-
-    ollama_api = OllamaAPI(
-        provider.options.base_url,
-        provider.options.api_key
-    )
-
-    # Obtener modelos disponibles
     try:
-        available_models = ollama_api.list_models()
-    except ConnectionError as e:
-        console.print(Panel(
-            f"ERROR: No se pudo conectar al endpoint:\n{e}",
-            title="Error de Conexión",
-            border_style="red"
-        ))
-        console.print("[yellow]No se pueden cargar los modelos sin conexión al provider.[/yellow]")
-        return
+        console.print(f"\n[bold]Conectando a {provider.options.base_url}...[/bold]")
 
-    if not available_models:
-        console.print("[red]ERROR: No hay modelos disponibles.[/red]")
-        return
+        ollama_api = OllamaAPI(
+            provider.options.base_url,
+            provider.options.api_key
+        )
 
-    # Mostrar lista de modelos
-    show_provider_models(provider)
+        # Obtener modelos disponibles
+        try:
+            available_models = ollama_api.list_models()
+        except ConnectionError as e:
+            console.print(Panel(
+                f"ERROR: No se pudo conectar al endpoint:\n{e}",
+                title="Error de Conexión",
+                border_style="red"
+            ))
+            console.print("[yellow]No se pueden cargar los modelos sin conexión al provider.[/yellow]")
+            return
 
-    # Seleccionar modelo
-    model_name = select_model(provider)
+        if not available_models:
+            console.print("[red]ERROR: No hay modelos disponibles.[/red]")
+            return
 
-    if not model_name:
-        console.print("[yellow]CANCELADO.[/yellow]")
-        return
+        # Mostrar lista de modelos
+        show_provider_models(provider)
 
-    # Verificar que el modelo existe
-    if not ollama_api.check_model_exists(model_name):
-        console.print(f"\n[red]ERROR: El modelo '{model_name}' no está disponible en este endpoint.[/red]")
-        console.print("📋 Modelos disponibles:")
-        for m in available_models:
-            console.print(f"  • {m}")
-        return
+        # Seleccionar modelo
+        model_name = select_model(provider)
 
-    # Lanzar Claude Code
-    console.print(f"\n[bold green]OK: Llamando a Claude con modelo '{model_name}'...[/bold green]")
+        if not model_name:
+            # console.print("[yellow]CANCELADO.[/yellow]")
+            return
 
-    # Construir flags adicionales para launch_interactive
-    launcher_args = {}
-    if dangerously_skip_permissions and "--dangerously-skip-permissions" not in (extra_args or []):
-        launcher_args["extra_args"] = extra_args + ["--dangerously-skip-permissions"] if extra_args else ["--dangerously-skip-permissions"]
-    else:
-        launcher_args["extra_args"] = extra_args
+        # Verificar que el modelo existe
+        if not ollama_api.check_model_exists(model_name):
+            console.print(f"\n[red]ERROR: El modelo '{model_name}' no está disponible en este endpoint.[/red]")
+            console.print("📋 Modelos disponibles:")
+            for m in available_models:
+                console.print(f"  • {m}")
+            return
 
-    launcher = ClaudeLauncher(
-        provider.options.base_url,
-        provider.options.api_key,
-        model=model_name,
-        **launcher_args
-    )
+        # Lanzar Claude Code
+        console.print(f"\n[bold green]OK: Llamando a Claude con modelo '{model_name}'...[/bold green]")
 
-    exit_code = launcher.launch_interactive()
-    sys.exit(exit_code)
+        # Construir flags adicionales para launch_interactive
+        launcher_args = {}
+        if dangerously_skip_permissions and "--dangerously-skip-permissions" not in (extra_args or []):
+            launcher_args["extra_args"] = extra_args + ["--dangerously-skip-permissions"] if extra_args else ["--dangerously-skip-permissions"]
+        else:
+            launcher_args["extra_args"] = extra_args
+
+        launcher = ClaudeLauncher(
+            provider.options.base_url,
+            provider.options.api_key,
+            model=model_name,
+            **launcher_args
+        )
+
+        try:
+            exit_code = launcher.launch_interactive()
+            sys.exit(exit_code)
+        except KeyboardInterrupt:
+            console.print("\n[yellow]Cancelado por el usuario.[/yellow]")
+            sys.exit(0)
+        except RuntimeError as e:
+            console.print(Panel(
+                f"[red]ERROR:[/red] [bold]{e}[/bold]",
+                title="Claude Code no instalado",
+                border_style="red"
+            ))
+            sys.exit(1)
+    except KeyboardInterrupt:
+        console.print("\n[yellow]Operación cancelada por el usuario.[/yellow]")
+        sys.exit(0)
 
 
 def run_new_provider():
