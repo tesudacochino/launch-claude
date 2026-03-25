@@ -1,6 +1,7 @@
 """Entry point para el CLI de Claude Launch."""
 
 import sys
+import subprocess
 import argparse
 
 # Forzar UTF-8 en Windows para emojis y caracteres especiales
@@ -29,6 +30,42 @@ from claude_launch.cli import run_provider_selection, run_new_provider
 console = Console()
 
 
+def _get_version_info():
+    """Obtener versión y hash del commit."""
+    ver = "unknown"
+
+    # Intentar obtener versión de importlib.metadata
+    try:
+        from importlib.metadata import version
+        ver = version("claude-launch")
+    except Exception:
+        # Intentar leer de pyproject.toml
+        try:
+            import tomllib
+            import os
+            main_file = os.path.abspath(__file__)
+            pyproject_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(main_file))), "pyproject.toml")
+            with open(pyproject_path, "rb") as f:
+                data = tomllib.load(f)
+                ver = data.get("project", {}).get("version", "unknown")
+        except Exception:
+            ver = "unknown"
+
+    try:
+        hash_commit = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=5
+        ).stdout.strip()
+        if not hash_commit:
+            hash_commit = "unknown"
+    except Exception:
+        hash_commit = "unknown"
+
+    return ver, hash_commit
+
+
 def main():
     """Entrada principal del programa.
 
@@ -48,9 +85,11 @@ def main():
         ccl chati --model mistral:latest -- --verbose --timeout=60
         ccl -r pp                       # Eliminar provider 'pp'
     """
+    version, commit_hash = _get_version_info()
+
     parser = argparse.ArgumentParser(
         prog="ccl",
-        description="Claude Launch - Lanza Claude Code con múltiples providers Ollama"
+        description=f"Claude Launch v{version} ({commit_hash}) - Lanza Claude Code con múltiples providers Ollama"
     )
 
     parser.add_argument(
