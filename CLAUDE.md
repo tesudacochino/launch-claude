@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Claude Launch** (CLI command: `ccl`) is a launcher for Claude Code that supports multiple Ollama-based providers. It connects Claude Code to various Ollama-compatible endpoints using the `ANTHROPIC_BASE_URL` and `ANTHROPIC_AUTH_TOKEN` environment variables.
+**Claude Launch** (CLI command: `ccl`) is a launcher for Claude Code that supports multiple Ollama-based providers. It uses `config.json` in OpenCode format to manage providers with base URLs and API keys.
 
 Configuration follows an OpenCode-style format where providers are stored directly at the root level of `config.json`.
 
@@ -75,7 +75,10 @@ build.bat
 ### Testing and Linting
 - No formal test suite exists yet
 - Verify CLI works: `python -m claude_launch.main --help`
-- Dependencies are managed via `pyproject.toml` with hatchling build system
+- Test suite uses pytest - install with `pip install pytest` after activating virtual environment
+- Run full test suite: `pytest tests/`
+- Run single test: `pytest tests/test_cli.py::test_provider_selection`
+- Dependencies managed via `pyproject.toml` with hatchling
 - No linting or pre-commit hooks configured
 
 ## Environment Variables
