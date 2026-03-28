@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['src\\claude_launch\\main.py'],
+    ['src/claude_launch/main.py'],
     pathex=[],
     binaries=[],
     datas=[],
