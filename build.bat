@@ -38,19 +38,8 @@ echo.
 echo Building Windows binary...
 echo.
 
-REM Compilar con PyInstaller
-%PYTHON_CMD% -m PyInstaller --clean ^
-    --onefile ^
-    --name=ccl ^
-    --hidden-import=claude_launch.config ^
-    --hidden-import=claude_launch.cli ^
-    --hidden-import=claude_launch.ollama_api ^
-    --hidden-import=claude_launch.launcher ^
-    --hidden-import=rich ^
-    --hidden-import=pydantic ^
-    --console ^
-    --noconfirm ^
-    src/claude_launch/main.py
+REM Compilar con PyInstaller usando el spec file
+%PYTHON_CMD% -m PyInstaller --clean ccl.spec --noconfirm
 
 if errorlevel 1 (
     echo.
