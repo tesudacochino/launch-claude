@@ -1,11 +1,12 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 
+# Incluir __init__.py para que importlib.metadata pueda leer la versión
 a = Analysis(
     ['src/claude_launch/main.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('src/claude_launch/__init__.py', 'claude_launch')],
     hiddenimports=['claude_launch.config', 'claude_launch.cli', 'claude_launch.ollama_api', 'claude_launch.launcher', 'rich', 'pydantic'],
     hookspath=[],
     hooksconfig={},

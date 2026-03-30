@@ -34,20 +34,15 @@ def _get_version_info():
     """Obtener versión y hash del commit."""
     ver = "unknown"
 
-    # Intentar obtener versión de importlib.metadata
+    # 1. Intentar obtener __version__ del paquete (funciona siempre)
     try:
-        from importlib.metadata import version
-        ver = version("claude-launch")
+        from claude_launch import __version__
+        ver = __version__
     except Exception:
-        # Intentar leer de pyproject.toml
+        # 2. Intentar obtener versión de importlib.metadata (funciona con metadata incluido)
         try:
-            import tomllib
-            import os
-            main_file = os.path.abspath(__file__)
-            pyproject_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(main_file))), "pyproject.toml")
-            with open(pyproject_path, "rb") as f:
-                data = tomllib.load(f)
-                ver = data.get("project", {}).get("version", "unknown")
+            from importlib.metadata import version
+            ver = version("claude-launch")
         except Exception:
             ver = "unknown"
 
