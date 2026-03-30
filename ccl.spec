@@ -1,16 +1,20 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 
-# Incluir todo el paquete claude_launch para que __version__ esté disponible
+# Incluir todo el paquete claude_launch
+import glob
+datas = []
+# Incluir todos los .py files del paquete
+for py_file in glob.glob('src/claude_launch/*.py'):
+    datas.append((py_file, 'claude_launch'))
+# Incluir pyproject.toml para obtener version si __version__ falla
+datas.append(('pyproject.toml', '.'))
+
 a = Analysis(
     ['src/claude_launch/main.py'],
     pathex=[],
     binaries=[],
-    datas=[('src/claude_launch/__init__.py', 'claude_launch/__init__.py'),
-           ('src/claude_launch/config.py', 'claude_launch/config.py'),
-           ('src/claude_launch/cli.py', 'claude_launch/cli.py'),
-           ('src/claude_launch/ollama_api.py', 'claude_launch/ollama_api.py'),
-           ('src/claude_launch/launcher.py', 'claude_launch/launcher.py')],
+    datas=datas,
     hiddenimports=['claude_launch.config', 'claude_launch.cli', 'claude_launch.ollama_api', 'claude_launch.launcher', 'rich', 'pydantic'],
     hookspath=[],
     hooksconfig={},
