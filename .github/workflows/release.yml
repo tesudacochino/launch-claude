@@ -14,8 +14,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
 
-      - name: Install PyInstaller
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install pyinstaller
@@ -39,8 +40,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
 
-      - name: Install PyInstaller
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install pyinstaller
@@ -50,11 +52,15 @@ jobs:
           python -m pip install -e .
           python -m PyInstaller --clean ccl.spec --noconfirm
 
+      - name: Rename binary
+        run: |
+          mv dist/ccl dist/ccl-linux
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ccl-linux
-          path: dist/ccl
+          path: dist/ccl-linux
 
   build-macos:
     runs-on: macos-latest
@@ -64,8 +70,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
 
-      - name: Install PyInstaller
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install pyinstaller
@@ -75,11 +82,15 @@ jobs:
           python -m pip install -e .
           python -m PyInstaller --clean ccl.spec --noconfirm
 
+      - name: Rename binary
+        run: |
+          mv dist/ccl dist/ccl-macos
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ccl-macos
-          path: dist/ccl
+          path: dist/ccl-macos
 
   release:
     needs: [build-windows, build-linux, build-macos]
@@ -105,8 +116,8 @@ jobs:
         with:
           files: |
             artifacts/ccl-windows/ccl.exe
-            artifacts/ccl-linux/ccl
-            artifacts/ccl-macos/ccl
+            artifacts/ccl-linux/ccl-linux
+            artifacts/ccl-macos/ccl-macos
           draft: false
           generate_release_notes: true
         env:
