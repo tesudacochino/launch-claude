@@ -46,12 +46,20 @@ def _get_version_info():
         except Exception:
             ver = "unknown"
 
-    # 3. Intentar obtener hash de variable de entorno (para builds de CI/CD)
+    # 3. Intentar obtener hash del archivo _commit.py (incrustado durante build de PyInstaller)
+    try:
+        from claude_launch._commit import COMMIT_HASH
+        if COMMIT_HASH:
+            return ver, COMMIT_HASH
+    except Exception:
+        pass
+
+    # 4. Intentar obtener hash de variable de entorno (para builds de CI/CD)
     hash_commit = os.environ.get("CCL_COMMIT_HASH", "")
     if hash_commit:
         return ver, hash_commit
 
-    # 4. Intentar obtener hash desde git (para desarrollo local)
+    # 5. Intentar obtener hash desde git (para desarrollo local)
     try:
         hash_commit = subprocess.run(
             ["git", "rev-parse", "--short", "HEAD"],
