@@ -1,12 +1,12 @@
 """Entry point para el CLI de Claude Launch."""
 
+import os
 import sys
 import subprocess
 import argparse
 
 # Forzar UTF-8 en Windows para emojis y caracteres especiales
 if sys.platform == "win32":
-    import os
     os.environ["PYTHONIOENCODING"] = "utf-8"
     # Configurar encoding de stdout/stderr
     if sys.stdout is not None and not sys.stdout.encoding == "utf-8":
@@ -46,6 +46,12 @@ def _get_version_info():
         except Exception:
             ver = "unknown"
 
+    # 3. Intentar obtener hash de variable de entorno (para builds de CI/CD)
+    hash_commit = os.environ.get("CCL_COMMIT_HASH", "")
+    if hash_commit:
+        return ver, hash_commit
+
+    # 4. Intentar obtener hash desde git (para desarrollo local)
     try:
         hash_commit = subprocess.run(
             ["git", "rev-parse", "--short", "HEAD"],
