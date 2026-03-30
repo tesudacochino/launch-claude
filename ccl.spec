@@ -1,5 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+import os
 
 # Incluir todo el paquete claude_launch
 import glob
@@ -9,6 +10,18 @@ for py_file in glob.glob('src/claude_launch/*.py'):
     datas.append((py_file, 'claude_launch'))
 # Incluir pyproject.toml para obtener version si __version__ falla
 datas.append(('pyproject.toml', '.'))
+
+# Generar archivo con el commit hash si está disponible
+commit_hash = os.environ.get('CCL_COMMIT_HASH', '')
+if commit_hash:
+    with open('src/claude_launch/_commit.py', 'w') as f:
+        f.write(f'COMMIT_HASH = "{commit_hash}"\n')
+    print(f"Generated _commit.py with hash: {commit_hash}")
+else:
+    # Asegurarse de que el archivo existe incluso si está vacío
+    with open('src/claude_launch/_commit.py', 'w') as f:
+        f.write('COMMIT_HASH = ""\n')
+    print("No CCL_COMMIT_HASH found, generated empty _commit.py")
 
 a = Analysis(
     ['src/claude_launch/main.py'],
