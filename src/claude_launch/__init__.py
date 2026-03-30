@@ -1,7 +1,7 @@
 """Claude Launch - Lanzador de Claude Code con múltiples providers Ollama."""
 
-__version__ = "1.1.3"
-__author__ = "Your Name"
+__version__ = "1.1.7"
+__author__ = "Mole"
 
 from .config import Config, ProviderConfig
 from .ollama_api import OllamaAPI
