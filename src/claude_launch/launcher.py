@@ -5,6 +5,7 @@ import signal
 import subprocess
 import sys
 import shutil
+from copy import deepcopy
 from typing import Optional
 
 
@@ -29,20 +30,19 @@ class ClaudeLauncher:
         self.extra_args = extra_args or []
 
     def get_env_vars(self) -> dict[str, str]:
-        """Obtener variables de entorno para lanzar Claude Code."""
+        """Obtener variables de entorno para lanzar Claude Code.
+
+        Returns:
+            Diccionario con TODAS las vars necesarias para Claude Code
+        """
         return {
-            **os.environ.copy(),
-            # Variables del servidor
             "ANTHROPIC_BASE_URL": self.base_url,
             "ANTHROPIC_AUTH_TOKEN": self.api_key,
-            # Modelos Anthropic -> Ollama
             "ANTHROPIC_DEFAULT_HAIKU_MODEL": self.model or "qwen3.5:35b",
             "ANTHROPIC_DEFAULT_OPUS_MODEL": self.model or "qwen3.5:35b",
             "ANTHROPIC_DEFAULT_SONNET_MODEL": self.model or "qwen3.5:35b",
-            # Certificados internos
             "ANTHROPIC_INSECURE_HTTP": "1",
             "NODE_TLS_REJECT_UNAUTHORIZED": "0",
-            # Evitar conflictos con Ollama local
             "OLLAMA_HOST": "",
         }
 
@@ -84,16 +84,6 @@ class ClaudeLauncher:
                 "  - O sigue las instrucciones de instalación en la documentación"
             )
 
-        # Fijar las variables de entorno en el proceso actual ANTES de lanzar Claude
-        os.environ["ANTHROPIC_BASE_URL"] = self.base_url
-        os.environ["ANTHROPIC_AUTH_TOKEN"] = self.api_key
-        os.environ["ANTHROPIC_DEFAULT_HAIKU_MODEL"] = selected_model
-        os.environ["ANTHROPIC_DEFAULT_OPUS_MODEL"] = selected_model
-        os.environ["ANTHROPIC_DEFAULT_SONNET_MODEL"] = selected_model
-        os.environ["ANTHROPIC_INSECURE_HTTP"] = "1"
-        os.environ["NODE_TLS_REJECT_UNAUTHORIZED"] = "0"
-        os.environ["OLLAMA_HOST"] = ""
-
         # Construir el comando - usa el ejecutable claude que está en el PATH
         cmd = ["claude"]
 
@@ -108,11 +98,17 @@ class ClaudeLauncher:
         signal.signal(signal.SIGINT, self._signal_handler)
         signal.signal(signal.SIGTERM, self._signal_handler)
 
-        # Lanzar el proceso heredando las variables de entorno ya configuradas
+        # Crear entorno específico SIN modificar os.environ global
+        # Esto previene race conditions y evita copiado redundante
+        env = deepcopy(os.environ)
+        env.update(self.get_env_vars())
+
+        # Lanzar el proceso con el entorno específico
         process = subprocess.Popen(
             cmd,
             stdout=sys.stdout,
             stderr=sys.stderr,
+            env=env,
         )
 
         return process

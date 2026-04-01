@@ -16,13 +16,25 @@ class OllamaAPI:
         """
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
+        self._model_cache: Optional[list[str]] = None
 
-    def list_models(self) -> list[str]:
-        """Listar todos los modelos disponibles en el endpoint.
+    @property
+    def models(self) -> list[str]:
+        """Obtener modelos disponibles con cacheo automático.
 
-        Returns:
-            Lista de nombres de modelos disponibles
+        La primera llamada hace HTTP GET, las siguientes usan cache en memoria.
+        Usa invalidate_cache() para limpiar el cache.
         """
+        if self._model_cache is None:
+            self._model_cache = self._fetch_models()
+        return self._model_cache
+
+    def invalidate_cache(self) -> None:
+        """Invalidar el cache de modelos (para cuando se agregan/eliminan modelos)."""
+        self._model_cache = None
+
+    def _fetch_models(self) -> list[str]:
+        """Hacer la llamada HTTP real a la API de Ollama."""
         try:
             response = requests.get(
                 f"{self.base_url}/v1/models",
@@ -48,6 +60,14 @@ class OllamaAPI:
         except requests.RequestException as e:
             raise ConnectionError(f"Failed to connect to Ollama at {self.base_url}: {e}")
 
+    def list_models(self) -> list[str]:
+        """Listar todos los modelos disponibles en el endpoint.
+
+        Returns:
+            Lista de nombres de modelos disponibles
+        """
+        return self.models
+
     def check_model_exists(self, model_name: str) -> bool:
         """Verificar si un modelo específico existe.
 
@@ -57,30 +77,8 @@ class OllamaAPI:
         Returns:
             True si el modelo existe, False en caso contrario
         """
-        try:
-            response = requests.get(
-                f"{self.base_url}/v1/models",
-                headers={"Authorization": f"Bearer {self.api_key}"}
-            )
-            response.raise_for_status()
-            data = response.json()
-
-            available_models = []
-            if "data" in data and isinstance(data["data"], list):
-                for m in data["data"]:
-                    if isinstance(m, dict) and "id" in m:
-                        available_models.append(m["id"])
-            elif isinstance(data, list):
-                available_models = data
-            elif "models" in data and isinstance(data["models"], list):
-                for m in data["models"]:
-                    if isinstance(m, dict) and "name" in m:
-                        available_models.append(m["name"])
-
-            return model_name in available_models
-
-        except requests.RequestException:
-            return False
+        # Usa el cache existente - no hace HTTP adicional
+        return model_name in self.models
 
     def test_connection(self) -> bool:
         """Probar si el endpoint es accesible.

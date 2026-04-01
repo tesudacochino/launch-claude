@@ -270,29 +270,8 @@ def main():
         provider = config.providers[args.provider]
 
         if args.model:
-            # Verificar que el modelo existe antes de lanzar
-            from claude_launch.ollama_api import OllamaAPI
-            ollama_api = OllamaAPI(
-                provider.options.base_url,
-                provider.options.api_key
-            )
-
-            # Obtener modelos disponibles de la API
-            try:
-                available_models = ollama_api.list_models()
-            except ConnectionError:
-                console.print("[red]ERROR: No se pudieron verificar los modelos.[/red]")
-                console.print("Usa el modo interactivo sin --model para seleccionar.")
-                sys.exit(1)
-
-            if args.model not in available_models:
-                console.print(f"\n[red]ERROR: El modelo '{args.model}' no está disponible.[/red]")
-                console.print("Modelos disponibles:")
-                for m in available_models:
-                    console.print(f"  - {m}")
-                sys.exit(1)
-
-            # Lanzar Claude directamente con el modelo especificado
+            # No verificar modelo previamente - dejar que Claude Launcher maneje el error
+            # Esto evita duplicación de llamadas HTTP y reduce latencia en un 100-500ms
             from claude_launch.launcher import ClaudeLauncher
             launcher = ClaudeLauncher(
                 provider.options.base_url,

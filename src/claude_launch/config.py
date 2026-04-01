@@ -4,7 +4,7 @@ import json
 import os
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 from pydantic import BaseModel, Field
 
 
@@ -175,6 +175,7 @@ class ConfigWrapper:
 
         self.path = Path(path).resolve()
         self._data: dict[str, dict] = {}
+        self._providers_cache: Optional[dict[str, ProviderConfig]] = None
 
         if self.path.exists():
             with open(self.path, "r") as f:
@@ -183,11 +184,13 @@ class ConfigWrapper:
                 # Filtramos las claves que no son metadatos
                 excluded_keys = {"$schema", "share", "tools"}
                 self._data = {k: v for k, v in data.items() if k not in excluded_keys}
+                # Parsear providers una vez en init
+                self._providers_cache = self._parse_providers()
 
     @property
     def providers(self) -> dict[str, ProviderConfig]:
-        """Obtener todos los providers."""
-        return self._parse_providers()
+        """Obtener todos los providers (con cacheo)."""
+        return self._providers_cache or {}
 
     def _parse_providers(self) -> dict[str, ProviderConfig]:
         """Parsear proveedores desde los datos raw."""
@@ -218,6 +221,11 @@ class ConfigWrapper:
 
         return providers
 
+    def invalidate_providers_cache(self) -> None:
+        """Invalidar cache de providers después de agregar/eliminar providers."""
+        self._providers_cache = None
+        self._providers_cache = self._parse_providers()
+
     def save(self) -> None:
         """Guardar la configuración actual."""
         data = {}
@@ -243,6 +251,9 @@ class ConfigWrapper:
 
         with open(self.path, "w") as f:
             json.dump(data, f, indent=2)
+
+        # Invalidar cache después de guardar
+        self.invalidate_providers_cache()
 
     def add_provider(self, name: str, provider: ProviderConfig) -> None:
         """Agregar un nuevo provider."""

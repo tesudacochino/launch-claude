@@ -55,13 +55,14 @@ def show_main_menu(config: ConfigWrapper):
     console.print("  [cyan]cl --exit[/cyan]           - Salir")
 
 
-def show_provider_models(provider: ProviderConfig):
-    """Mostrar modelos disponibles de un provider en una tabla numerada."""
+def show_provider_models(provider: ProviderConfig, ollama_api: OllamaAPI):
+    """Mostrar modelos disponibles de un provider en una tabla numerada.
+
+    Args:
+        provider: El provider seleccionado
+        ollama_api: Instancia ya creada de OllamaAPI (usa su list_models())
+    """
     try:
-        ollama_api = OllamaAPI(
-            provider.options.base_url,
-            provider.options.api_key
-        )
         models = ollama_api.list_models()
     except ConnectionError as e:
         console.print(Panel(
@@ -86,22 +87,18 @@ def show_provider_models(provider: ProviderConfig):
     console.print(Panel(table, title="📦 Modelos Disponibles", border_style="green"))
 
 
-def select_model(provider: ProviderConfig) -> Optional[str]:
+def select_model(provider: ProviderConfig, ollama_api: OllamaAPI) -> Optional[str]:
     """Permitir al usuario seleccionar un modelo.
+
+    Args:
+        provider: El provider seleccionado
+        ollama_api: Instancia de OllamaAPI (usa su list_models())
 
     Returns:
         Nombre del modelo seleccionado o None si se cancela
     """
-    try:
-        ollama_api = OllamaAPI(
-            provider.options.base_url,
-            provider.options.api_key
-        )
-        available_models = ollama_api.list_models()
-    except ConnectionError:
-        console.print("\n[red]ERROR: No se pudieron cargar los modelos del provider.[/red]")
-        console.print("Verifica que Ollama esté corriendo y sea accesible.")
-        return None
+    # Usa models de ollama_api (viene del cache)
+    available_models = ollama_api.models
 
     if not available_models:
         console.print("\n[red]ERROR: No hay modelos disponibles.[/red]")
@@ -248,11 +245,11 @@ def run_provider_selection(provider: ProviderConfig, dangerously_skip_permission
             console.print("[red]ERROR: No hay modelos disponibles.[/red]")
             return
 
-        # Mostrar lista de modelos
-        show_provider_models(provider)
+        # Mostrar lista de modelos (reusa ollama_api existente)
+        show_provider_models(provider, ollama_api)
 
         # Seleccionar modelo
-        model_name = select_model(provider)
+        model_name = select_model(provider, ollama_api)
 
         if not model_name:
             # console.print("[yellow]CANCELADO.[/yellow]")
