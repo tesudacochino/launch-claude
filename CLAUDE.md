@@ -12,72 +12,62 @@ Configuration follows an OpenCode-style format where providers are stored direct
 
 ### Development Setup
 ```bash
-# Linux/macOS - Install dependencies
-./install.sh
+# Install in editable mode
+pip install -e .
 
-# Windows - Install dependencies
-install.bat
+# Or with uv
+uv pip install -e .
 
-# Run CLI directly (from venv)
-source .venv/bin/activate
+# Run CLI directly
 python -m claude_launch.main [provider] [--model <name>]
 ```
 
 ### Running the CLI
 ```bash
 # Show help
-./scripts/ccl
-./scripts/ccl --help
+ccl
+ccl --help
 
 # List models interactively for a provider
-./scripts/ccl mole
-./scripts/ccl chati
+ccl mole
+ccl chati
 
 # Launch directly with a specific model
-./scripts/ccl mole --model mistral:latest
-./scripts/ccl chati --model qwen3.5:35b
+ccl mole --model mistral:latest
+ccl chati --model qwen3.5:35b
 
 # Add a new provider via interactive assistant
-./scripts/ccl --new
+ccl --new
 
 # List all configured providers
-./scripts/ccl --list
-./scripts/ccl -l
+ccl --list
+ccl -l
 
 # Remove a provider
-./scripts/ccl --remove <provider>
-./scripts/ccl -r <provider>
+ccl --remove <provider>
+ccl -r <provider>
 
 # Use custom config file
-./scripts/ccl --config /path/to/config.json [provider]
+ccl --config /path/to/config.json [provider]
 
 # Pass flags to Claude Code (after --)
-./scripts/ccl mole --model mistral:latest -- --dangerously-skip-permissions
-./scripts/ccl mole --model qwen3.5:35b -- --verbose --timeout=60
+ccl mole --model mistral:latest -- --dangerously-skip-permissions
+ccl mole --model qwen3.5:35b -- --verbose --timeout=60
 ```
 
 ### Build and Compilation
 
-**Linux/macOS:**
+Binaries are built automatically via GitHub Actions on tag push (`v*`). For local builds:
+
 ```bash
-./build.sh
-# Output: dist/ccl
+pip install -e '.[build]'
+python -m PyInstaller --clean ccl.spec --noconfirm
+# Output: dist/ccl (Linux/macOS) or dist/ccl.exe (Windows)
 ```
-
-**Windows:**
-```powershell
-build.bat
-# Output: dist/ccl.exe
-```
-
-**Note:** Requires PyInstaller installed (`pip install pyinstaller`)
 
 ### Testing and Linting
 - No formal test suite exists yet
 - Verify CLI works: `python -m claude_launch.main --help`
-- Test suite uses pytest - install with `pip install pytest` after activating virtual environment
-- Run full test suite: `pytest tests/`
-- Run single test: `pytest tests/test_cli.py::test_provider_selection`
 - Dependencies managed via `pyproject.toml` with hatchling
 - No linting or pre-commit hooks configured
 
@@ -98,22 +88,18 @@ When launching Claude Code, the launcher sets these environment variables:
 ```
 claude-launch/
 ├── pyproject.toml          # Project metadata, dependencies, hatch build config
+├── ccl.spec                # PyInstaller spec for binary builds
 ├── config.json             # Provider configurations (OpenCode-style format)
+├── .github/workflows/
+│   └── release.yml         # CI/CD: builds binaries on tag push
 ├── src/claude_launch/      # Main Python package
 │   ├── __init__.py         # Exports: Config, ProviderConfig, OllamaAPI, ClaudeLauncher
 │   ├── main.py             # CLI entry point with argparse
 │   ├── config.py           # Configuration management (pydantic + OpenCode wrapper)
 │   ├── cli.py              # Rich-based interactive UI (menus, selection, prompts)
 │   ├── ollama_api.py       # Ollama API client for model listing and connection testing
-│   └── launcher.py         # Subprocess launcher for Claude Code with env vars
-├── scripts/                # CLI wrappers
-│   ├── ccl                  # Linux/macOS wrapper script
-│   └── ccl.bat              # Windows batch wrapper
-├── install.sh              # Linux/macOS installation script
-├── install.bat             # Windows installation script (uses uv)
-├── build.sh                # Linux/macOS binary compilation (PyInstaller)
-├── build.bat               # Windows binary compilation (PyInstaller)
-├── cl.spec                 # PyInstaller spec file for Windows builds
+│   ├── launcher.py         # Subprocess launcher for Claude Code with env vars
+│   └── _commit.py          # Auto-generated commit hash (used in binary builds)
 ```
 
 ## Core Components
@@ -171,28 +157,19 @@ Providers are stored directly at the root of `config.json` (OpenCode-style):
 ## File Structure Notes
 
 - Package imports use `.claude_launch.*` relative syntax (e.g., `from .config import ConfigWrapper`)
-- Virtual environment at `.venv/` created via `uv venv .venv`
+- Entry point defined in `pyproject.toml`: `ccl = "claude_launch.main:main"`
 - Binary builds output to `dist/ccl` (Linux/macOS) or `dist/ccl.exe` (Windows)
 - `config.json` location: same directory as executable when run as binary
 
 ## Development Workflow
 
 1. **Modify code**: Edit files under `src/claude_launch/`
-2. **Test locally**: Activate venv and run `python -m claude_launch.main [args]`
-3. **Add provider**: Use `./scripts/ccl --new` or edit `config.json` directly
-4. **Build binary**: Run `./build.sh` to compile standalone executable
+2. **Test locally**: Run `python -m claude_launch.main [args]` or `ccl [args]`
+3. **Add provider**: Use `ccl --new` or edit `config.json` directly
+4. **Release**: Push a `v*` tag to trigger CI binary builds
 
 ## Notes
 
-- `install.sh` uses `pip` for dependency installation from `pyproject.toml`
-- `install.bat` uses `uv` (requires `uv` installed separately) for cross-platform consistency
-- `build.sh` (Linux/macOS) and `build.bat` (Windows) use PyInstaller for binary compilation
-- `cl.spec` is the PyInstaller spec file used for Windows builds (defines hidden imports)
+- `ccl.spec` is the PyInstaller spec file used for binary builds (defines hidden imports, commit hash injection)
 - Configuration is loaded from `config.json` in the same directory as the executable when running as a binary
-- On Windows, `scripts/ccl.bat` handles UTF-8 encoding for emojis and special characters
 - Default `ANTHROPIC_DEFAULT_HAIKU_MODEL`, `ANTHROPIC_DEFAULT_OPUS_MODEL`, `ANTHROPIC_DEFAULT_SONNET_MODEL` are set to the selected model
-
-## Related Documentation
-
-- [README.md](./README.md) - User-facing documentation with quick start and usage examples
-- [DOCUMENTACION_TECNICA.md](./DOCUMENTACION_TECNICA.md) - Technical documentation for developers (architecture, build process, API details)

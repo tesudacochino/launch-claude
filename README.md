@@ -9,13 +9,14 @@ Lanzador de **Claude Code** que se conecta a diferentes endpoints Ollama. Usa `c
 git clone <repo-url>
 cd claude-launch
 
-# Instalar dependencias
-./install.sh           # Linux/macOS
-# o
-install.bat            # Windows
+# Instalar con pip
+pip install -e .
+
+# O con uv
+uv pip install -e .
 
 # Empezar a usar
-./scripts/ccl
+ccl
 ```
 
 ## 🚀 Cómo Usar
@@ -23,13 +24,13 @@ install.bat            # Windows
 ### Ver todos los providers configurados
 
 ```bash
-./scripts/ccl --list
+ccl --list
 ```
 
 ### Seleccionar un modelo (modo interactivo)
 
 ```bash
-./scripts/ccl mole
+ccl mole
 # Muestra una lista numerada de modelos disponibles
 # Ingresa el número para seleccionar
 ```
@@ -37,57 +38,51 @@ install.bat            # Windows
 ### Lanzar directamente con un modelo específico
 
 ```bash
-./scripts/ccl mole --model mistral:latest
-./scripts/ccl chati --model qwen3.5:35b
+ccl mole --model mistral:latest
+ccl chati --model qwen3.5:35b
 ```
 
 ### Agregar un nuevo provider
 
 ```bash
-./scripts/ccl --new
+ccl --new
 # Asistente interactivo para configurar un nuevo endpoint Ollama
 ```
 
 ### Usar con un archivo de configuración personalizado
 
 ```bash
-./scripts/ccl --config /ruta/a/config.json <provider>
+ccl --config /ruta/a/config.json <provider>
 ```
 
 ### Pasar flags a Claude Code
 
 ```bash
-# Despu\u00e9s de -- todo se pasa a Claude Code
-./scripts/ccl mole --model mistral:latest -- --dangerously-skip-permissions
-./scripts/ccl mole --model qwen3.5:35b -- --verbose --timeout=60
+# Después de -- todo se pasa a Claude Code
+ccl mole --model mistral:latest -- --dangerously-skip-permissions
+ccl mole --model qwen3.5:35b -- --verbose --timeout=60
 ```
 
 ## Comandos Disponibles
 
 | Comando | Descripción |
 |---------|-------------|
-| `./scripts/ccl` | Mostrar ayuda y menú principal |
-| `./scripts/ccl <provider>` | Lista modelos e interactuar con Claude |
-| `./scripts/ccl <provider> --model <name>` | Lanzar modelo específico directamente |
-| `./scripts/ccl --new` | Asistente para agregar nuevo provider |
-| `./scripts/ccl --list` o `-l` | Listar providers configurados |
-| `./scripts/ccl -r <provider>` | Eliminar un provider |
-| `./scripts/ccl --config <path>` | Usar archivo de configuración personalizado |
+| `ccl` | Mostrar ayuda y menú principal |
+| `ccl <provider>` | Lista modelos e interactuar con Claude |
+| `ccl <provider> --model <name>` | Lanzar modelo específico directamente |
+| `ccl --new` | Asistente para agregar nuevo provider |
+| `ccl --list` o `-l` | Listar providers configurados |
+| `ccl -r <provider>` | Eliminar un provider |
+| `ccl --config <path>` | Usar archivo de configuración personalizado |
 
 ## 📦 Compilar Binary
 
-Crear un ejecutable auto-contenido:
+Los binarios se generan automáticamente con GitHub Actions al crear un tag `v*`. Para build local:
 
-**Linux/macOS:**
 ```bash
-./build.sh
-# Salida: dist/ccl
-```
-
-**Windows:**
-```powershell
-build.bat
-# Salida: dist/ccl.exe
+pip install -e '.[build]'
+python -m PyInstaller --clean ccl.spec --noconfirm
+# Salida: dist/ccl (Linux/macOS) o dist/ccl.exe (Windows)
 ```
 
 ## 📁 Configuración
@@ -111,7 +106,6 @@ El archivo `config.json` define los providers:
 
 ## 🔗 Documentación
 
-- [Documentación Técnica](./DOCUMENTACION_TECNICA.md) - Arquitectura, desarrollo, detalles de configuración
 - [CLAUDE.md](./CLAUDE.md) - Guía para desarrollar en este repositorio con Claude Code
 
 ## Licencia

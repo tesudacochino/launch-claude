@@ -37,8 +37,8 @@ ENV/
 Thumbs.db
 
 # Compiled binaries
-cl
-cl.exe
+ccl
+ccl.exe
 binaries/
 
 # Logs
@@ -56,5 +56,6 @@ htmlcov/
 # Configuration files (user-specific - excluded from version control)
 config.json
 
-# PyInstaller
-cl.spec
+# Build artifacts (PyInstaller / Nuitka)
+*.build/
+*.onefile-build/

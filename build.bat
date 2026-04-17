@@ -15,18 +15,10 @@ if exist .venv\Scripts\python.exe (
     echo Using system Python
 )
 
-REM Asegurar pip
-%PYTHON_CMD% -m ensurepip --upgrade >nul 2>&1
-if errorlevel 1 (
-    echo Error: Python pip not found
-    pause
-    exit /b 1
-)
-
-REM Instalar dependencias
+REM Instalar dependencias + pyinstaller
 echo Installing dependencies...
 %PYTHON_CMD% -m pip install --upgrade pip >nul 2>&1
-%PYTHON_CMD% -m pip install -r requirements.txt
+%PYTHON_CMD% -m pip install -e ".[build]"
 
 if errorlevel 1 (
     echo Error: Failed to install dependencies
@@ -64,5 +56,3 @@ if exist dist\ccl.exe (
     echo.
     echo To test the binary, run: dist\ccl.exe --help
 )
-
-rem pause

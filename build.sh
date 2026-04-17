@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Script de compilación a binary con PyInstaller (Linux/macOS)
-# Uso: ./build.sh
+# Build binary with PyInstaller (Linux/macOS)
+# Usage: ./build.sh
 
 set -e
 
@@ -9,7 +9,7 @@ echo " Building claude-launch with PyInstaller"
 echo "===================================================="
 echo
 
-# Detectar python del venv o sistema (Linux y macOS)
+# Detect python from venv or system
 if [ -f ".venv/bin/python" ]; then
     PYTHON_CMD=".venv/bin/python"
     echo "Using virtual environment Python"
@@ -24,21 +24,16 @@ else
     exit 1
 fi
 
-# Asegurar pip
-if ! $PYTHON_CMD -m ensurepip --upgrade >/dev/null 2>&1; then
-    echo "Warning: ensurepip failed, trying pip directly..."
-fi
-
-# Instalar dependencias
+# Install dependencies + pyinstaller
 echo "Installing dependencies..."
 $PYTHON_CMD -m pip install --upgrade pip >/dev/null 2>&1 || true
-$PYTHON_CMD -m pip install -r requirements.txt
+$PYTHON_CMD -m pip install -e ".[build]"
 
 echo
 echo "Building binary..."
 echo
 
-# Compilar con PyInstaller usando el spec file
+# Build with PyInstaller using the spec file
 $PYTHON_CMD -m PyInstaller --clean ccl.spec --noconfirm
 
 echo
