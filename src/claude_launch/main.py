@@ -20,14 +20,11 @@ if sys.platform == "win32":
         except Exception:
             pass
 
-from rich.console import Console
 from rich.panel import Panel
 
-from claude_launch.config import ConfigWrapper, ProviderConfig
+from claude_launch.console import console
+from claude_launch.config import ConfigWrapper
 from claude_launch.cli import run_provider_selection, run_new_provider
-
-
-console = Console()
 
 
 def _get_version_info():
@@ -75,6 +72,23 @@ def _get_version_info():
     return ver, hash_commit
 
 
+def _split_args(argv: list[str]) -> tuple[list[str], list[str]]:
+    """Separar argumentos del CLI y argumentos para Claude Code.
+
+    Todo lo que viene después de '--' se pasa directamente a Claude Code.
+
+    Args:
+        argv: sys.argv[1:]
+
+    Returns:
+        Tupla (args_cli, args_claude)
+    """
+    if "--" in argv:
+        sep = argv.index("--")
+        return argv[:sep], argv[sep + 1:]
+    return argv, []
+
+
 def main():
     """Entrada principal del programa.
 
@@ -95,6 +109,9 @@ def main():
         ccl -r pp                       # Eliminar provider 'pp'
     """
     version, commit_hash = _get_version_info()
+
+    # Separar args del CLI y args para Claude Code (después de --)
+    cli_argv, extra_args = _split_args(sys.argv[1:])
 
     parser = argparse.ArgumentParser(
         prog="ccl",
@@ -130,57 +147,15 @@ def main():
     )
 
     parser.add_argument(
-        "--dangerously-skip-permissions", "-d",
-        action="store_true",
-        help="Skip permission checks when launching Claude Code (passes --dangerously-skip-permissions to claude)"
-    )
-
-    parser.add_argument(
         "--remove", "-r",
         dest="remove_provider",
         metavar="PROVIDER",
         help="Eliminar un provider existente"
     )
 
-    # Usar parse_known_args para capturar argumentos adicionales después de --
-    args, extra_args = parser.parse_known_args()
-
-    # Filtrar flags propios del CLI y pasar el resto a Claude
-    if extra_args:
-        cli_options_with_values = {"--model", "-m", "--config", "-c"}
-        extra_args_filtered = []
-        skip_next = False
-
-        for i, arg in enumerate(extra_args):
-            if skip_next:
-                skip_next = False
-                continue
-
-            # Skip flags propios del CLI (incluyendo -d que ya fue capturado)
-            if arg in cli_options_with_values:
-                skip_next = True
-                continue
-            if arg in {"--new", "-n", "--list", "-l"}:
-                continue
-            if arg in {"--dangerously-skip-permissions", "-d"}:
-                continue
-
-            extra_args_filtered.append(arg)
-
-        args.extra_args = extra_args_filtered
-    else:
-        args.extra_args = []
-
-    # Si se pasó -d explícitamente, agregarlo a extra_args (si no está ya)
-    if hasattr(args, 'dangerously_skip_permissions') and args.dangerously_skip_permissions:
-        if "--dangerously-skip-permissions" not in args.extra_args:
-            args.extra_args.append("--dangerously-skip-permissions")
-
-    # Pasar los flags de configuración al atributo correspondiente
-    args.config = getattr(args, 'config', None)
+    args = parser.parse_args(cli_argv)
 
     # Cargar configuración
-    # Usar el path pasado por --config o None para usar el default (_get_config_path)
     config_path = args.config
     try:
         config = ConfigWrapper(config_path)
@@ -270,15 +245,13 @@ def main():
         provider = config.providers[args.provider]
 
         if args.model:
-            # No verificar modelo previamente - dejar que Claude Launcher maneje el error
-            # Esto evita duplicación de llamadas HTTP y reduce latencia en un 100-500ms
+            # Lanzar directamente con el modelo especificado
             from claude_launch.launcher import ClaudeLauncher
             launcher = ClaudeLauncher(
                 provider.options.base_url,
                 provider.options.api_key,
                 model=args.model,
-                dangerously_skip_permissions=False,  # Ya está en extra_args si se pasó -d
-                extra_args=args.extra_args
+                extra_args=extra_args,
             )
             try:
                 exit_code = launcher.launch_interactive()
@@ -292,9 +265,8 @@ def main():
                 sys.exit(1)
         else:
             # Modo interactivo - mostrar lista y seleccionar
-            from claude_launch.cli import run_provider_selection
             try:
-                run_provider_selection(provider, extra_args=args.extra_args)
+                run_provider_selection(provider, extra_args=extra_args)
             except KeyboardInterrupt:
                 console.print("\n[yellow]Operación cancelada por el usuario.[/yellow]")
                 sys.exit(0)

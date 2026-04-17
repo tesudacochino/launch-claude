@@ -5,28 +5,25 @@ import signal
 import subprocess
 import sys
 import shutil
-from copy import deepcopy
 from typing import Optional
 
 
 class ClaudeLauncher:
     """Ejecuta Claude Code con variables de entorno específicas."""
 
-    def __init__(self, base_url: str, api_key: str = "ollama", model: str = "qwen3.5:35b",
-                 dangerously_skip_permissions: bool = False, extra_args: Optional[list[str]] = None):
+    def __init__(self, base_url: str, api_key: str = "ollama", model: str = "",
+                 extra_args: Optional[list[str]] = None):
         """Inicializar el launcher.
 
         Args:
             base_url: URL del endpoint para Claude Code
             api_key: API key de autenticación
-            model: Modelo por defecto (ej: qwen3.5:35b)
-            dangerously_skip_permissions: Si True, pasa --dangerously-skip-permissions a Claude Code
-            extra_args: Lista de flags adicionales a pasar a Claude Code (ej: ["--verbose", "--timeout=30"])
+            model: Modelo a usar (ej: qwen3.5:35b)
+            extra_args: Lista de flags adicionales a pasar a Claude Code (ej: ["--verbose", "--dangerously-skip-permissions"])
         """
         self.base_url = base_url
         self.api_key = api_key
         self.model = model
-        self.dangerously_skip_permissions = dangerously_skip_permissions
         self.extra_args = extra_args or []
 
     def get_env_vars(self) -> dict[str, str]:
@@ -38,9 +35,9 @@ class ClaudeLauncher:
         return {
             "ANTHROPIC_BASE_URL": self.base_url,
             "ANTHROPIC_AUTH_TOKEN": self.api_key,
-            "ANTHROPIC_DEFAULT_HAIKU_MODEL": self.model or "qwen3.5:35b",
-            "ANTHROPIC_DEFAULT_OPUS_MODEL": self.model or "qwen3.5:35b",
-            "ANTHROPIC_DEFAULT_SONNET_MODEL": self.model or "qwen3.5:35b",
+            "ANTHROPIC_DEFAULT_HAIKU_MODEL": self.model,
+            "ANTHROPIC_DEFAULT_OPUS_MODEL": self.model,
+            "ANTHROPIC_DEFAULT_SONNET_MODEL": self.model,
             "ANTHROPIC_INSECURE_HTTP": "1",
             "NODE_TLS_REJECT_UNAUTHORIZED": "0",
             "OLLAMA_HOST": "",
@@ -64,7 +61,7 @@ class ClaudeLauncher:
         """Lanzar Claude Code con la configuración actual.
 
         Args:
-            model: Nombre del modelo opcional (ej: qwen3.5:35b)
+            model: Nombre del modelo opcional (override)
 
         Returns:
             Proceso de Claude Code en ejecución
@@ -84,14 +81,8 @@ class ClaudeLauncher:
                 "  - O sigue las instrucciones de instalación en la documentación"
             )
 
-        # Construir el comando - usa el ejecutable claude que está en el PATH
+        # Construir el comando
         cmd = ["claude"]
-
-        # Agregar flags opcionales para Claude Code
-        if self.dangerously_skip_permissions:
-            cmd.append("--dangerously-skip-permissions")
-
-        # Agregar flags adicionales
         cmd.extend(self.extra_args)
 
         # Registrar manejador de señales para Ctrl+C limpio
@@ -99,9 +90,7 @@ class ClaudeLauncher:
         signal.signal(signal.SIGTERM, self._signal_handler)
 
         # Crear entorno específico SIN modificar os.environ global
-        # Esto previene race conditions y evita copiado redundante
-        env = deepcopy(os.environ)
-        env.update(self.get_env_vars())
+        env = {**os.environ, **self.get_env_vars()}
 
         # Lanzar el proceso con el entorno específico
         process = subprocess.Popen(

@@ -3,12 +3,12 @@
 __version__ = "1.1.8"
 __author__ = "Mole"
 
-from .config import Config, ProviderConfig
+from .config import ConfigWrapper, ProviderConfig
 from .ollama_api import OllamaAPI
 from .launcher import ClaudeLauncher
 
 __all__ = [
-    "Config",
+    "ConfigWrapper",
     "ProviderConfig",
     "OllamaAPI",
     "ClaudeLauncher",

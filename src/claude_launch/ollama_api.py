@@ -87,10 +87,8 @@ class OllamaAPI:
             True si la conexión funciona, False en caso contrario
         """
         try:
-            response = requests.get(
-                f"{self.base_url}/v1/models",
-                headers={"Authorization": f"Bearer {self.api_key}"}
-            )
-            return response.status_code == 200
-        except requests.RequestException:
+            self.invalidate_cache()
+            self.list_models()
+            return True
+        except (ConnectionError, Exception):
             return False
