@@ -93,19 +93,19 @@ def main():
     """Entrada principal del programa.
 
     Uso:
-        ccl                             - Muestra menú principal
+        ccl                             - Mostrar ayuda
         ccl <provider>                  - Listar y seleccionar modelos de un provider
-        ccl <provider> --model <name>   - Lanzar Claude con modelo específico
+        ccl <provider> --model <name>   - Lanzar Claude Code con modelo específico
+        ccl <provider> --model <name> -d - Lanzar sin pedir permisos
         ccl <provider> --model <name> -- --flag  - Pasar flags a Claude Code
         ccl --new                       - Agregar nuevo provider
         ccl --list                      - Listar todos los providers configurados
         ccl -r <provider>               - Eliminar un provider existente
-        ccl --help                      - Mostrar ayuda
 
     Ejemplos:
         ccl mole --model qwen3.5:35b
-        ccl mole --model qwen3.5:35b -- --dangerously-skip-permissions
-        ccl chati --model mistral:latest -- --verbose --timeout=60
+        ccl mole --model qwen3.5:35b -d
+        ccl mole --model qwen3.5:35b -- --verbose --timeout=60
         ccl -r pp                       # Eliminar provider 'pp'
     """
     version, commit_hash = _get_version_info()
@@ -147,6 +147,12 @@ def main():
     )
 
     parser.add_argument(
+        "--dangerously-skip-permissions", "-d",
+        action="store_true",
+        help="Lanzar Claude Code sin pedir permisos"
+    )
+
+    parser.add_argument(
         "--remove", "-r",
         dest="remove_provider",
         metavar="PROVIDER",
@@ -154,6 +160,10 @@ def main():
     )
 
     args = parser.parse_args(cli_argv)
+
+    # Inyectar --dangerously-skip-permissions en extra_args si se pasa -d
+    if args.dangerously_skip_permissions:
+        extra_args = extra_args + ["--dangerously-skip-permissions"]
 
     # Cargar configuración
     config_path = args.config

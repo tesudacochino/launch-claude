@@ -36,6 +36,9 @@ ccl chati
 ccl mole --model mistral:latest
 ccl chati --model qwen3.5:35b
 
+# Launch without asking for permissions (-d shortcut)
+ccl mole --model mistral:latest -d
+
 # Add a new provider via interactive assistant
 ccl --new
 
@@ -51,7 +54,6 @@ ccl -r <provider>
 ccl --config /path/to/config.json [provider]
 
 # Pass flags to Claude Code (after --)
-ccl mole --model mistral:latest -- --dangerously-skip-permissions
 ccl mole --model qwen3.5:35b -- --verbose --timeout=60
 ```
 
@@ -97,6 +99,7 @@ claude-launch/
 │   ├── main.py             # CLI entry point with argparse
 │   ├── config.py           # Configuration management (pydantic + OpenCode wrapper)
 │   ├── cli.py              # Rich-based interactive UI (menus, selection, prompts)
+│   ├── console.py          # Shared rich.Console singleton instance
 │   ├── ollama_api.py       # Ollama API client for model listing and connection testing
 │   ├── launcher.py         # Subprocess launcher for Claude Code with env vars
 │   └── _commit.py          # Auto-generated commit hash (used in binary builds)
@@ -117,6 +120,7 @@ claude-launch/
 - `main.py`: argparse-based argument parsing, mode dispatching
 - `cli.py`: Interactive menus for provider/model selection and adding new providers
 - Modes: interactive model selection, direct model launch, provider addition wizard
+- `-d` / `--dangerously-skip-permissions`: shortcut that injects the flag into Claude Code
 - Extra args after `--` are passed through to Claude Code
 
 ### API Client (`ollama_api.py`)
@@ -130,7 +134,7 @@ claude-launch/
 - Injects `ANTHROPIC_BASE_URL` and `ANTHROPIC_AUTH_TOKEN` per-provider
 - Also sets `ANTHROPIC_DEFAULT_HAIKU_MODEL`, `ANTHROPIC_DEFAULT_OPUS_MODEL`, `ANTHROPIC_DEFAULT_SONNET_MODEL`
 - Supports optional `--model` argument and extra args passed to Claude Code CLI
-- `--dangerously-skip-permissions` flag is passed through to Claude Code
+- `-d` / `--dangerously-skip-permissions` en main.py inyecta el flag automáticamente en extra_args
 
 ## Configuration Format
 
