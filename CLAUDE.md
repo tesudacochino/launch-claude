@@ -84,6 +84,7 @@ When launching Claude Code, the launcher sets these environment variables:
 - `ANTHROPIC_INSECURE_HTTP`: `"1"` - enables HTTP without SSL verification
 - `NODE_TLS_REJECT_UNAUTHORIZED`: `"0"` - accepts invalid certificates
 - `OLLAMA_HOST`: `""` - avoids conflicts with local Ollama
+- `CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS`: `"1"` - disables experimental beta features
 
 ## High-Level Architecture
 

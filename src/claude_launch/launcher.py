@@ -41,6 +41,7 @@ class ClaudeLauncher:
             "ANTHROPIC_INSECURE_HTTP": "1",
             "NODE_TLS_REJECT_UNAUTHORIZED": "0",
             "OLLAMA_HOST": "",
+            "CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS": "1",
         }
 
     @staticmethod
