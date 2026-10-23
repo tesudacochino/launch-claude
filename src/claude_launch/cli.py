@@ -207,7 +207,7 @@ def run_new_provider():
     # Crear y guardar provider (sin modelos - se fetchearán desde API)
     provider_config = ProviderConfig(
         type="ollama",
-        options={"base_url": base_url, "apiKey": api_key},
+        options={"base_url": base_url, "api_key": api_key},
         models={}
     )
 

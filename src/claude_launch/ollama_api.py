@@ -1,7 +1,10 @@
 """Interfaz con la API de Ollama."""
 
 import requests
+import urllib3
 from typing import Optional
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 class OllamaAPI:
@@ -38,7 +41,9 @@ class OllamaAPI:
         try:
             response = requests.get(
                 f"{self.base_url}/v1/models",
-                headers={"Authorization": f"Bearer {self.api_key}"}
+                headers={"Authorization": f"Bearer {self.api_key}"},
+                verify=False,
+                timeout=30
             )
             response.raise_for_status()
             data = response.json()
