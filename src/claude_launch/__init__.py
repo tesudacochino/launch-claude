@@ -1,6 +1,6 @@
 """Claude Launch - Lanzador de Claude Code con múltiples providers Ollama."""
 
-__version__ = "1.1.11"
+__version__ = "1.2.0"
 __author__ = "Mole"
 
 from .config import ConfigWrapper, ProviderConfig
